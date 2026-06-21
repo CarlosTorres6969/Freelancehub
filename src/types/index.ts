@@ -110,6 +110,16 @@ export interface Favorite {
   service?: Service
 }
 
+export interface AppNotification {
+  id: string
+  user_id: string
+  type: "order" | "message" | "review" | "system"
+  title: string
+  message: string
+  read: boolean
+  created_at: string
+}
+
 export interface ContactMessage {
   id: string
   name: string

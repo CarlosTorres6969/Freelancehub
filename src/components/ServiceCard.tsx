@@ -1,11 +1,12 @@
 "use client"
 
+import { memo } from "react"
 import Link from "next/link"
 import type { Service } from "@/types"
 import TiltCard from "./TiltCard"
 import FavoriteButton from "./FavoriteButton"
 
-export default function ServiceCard({ service }: { service: Service }) {
+function ServiceCardInner({ service }: { service: Service }) {
   const categoryName = service.category?.name ?? ""
   const freelancerName = service.freelancer?.name ?? ""
   const freelancerAvatar = service.freelancer
@@ -68,3 +69,5 @@ export default function ServiceCard({ service }: { service: Service }) {
     </TiltCard>
   )
 }
+
+export default memo(ServiceCardInner)

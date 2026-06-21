@@ -4,6 +4,14 @@ import { useState, useRef, useEffect } from "react"
 import { useNotifications } from "@/contexts/NotificationContext"
 import Link from "next/link"
 
+function formatTime(ts: string) {
+  const seconds = Math.floor((Date.now() - new Date(ts).getTime()) / 1000)
+  if (seconds < 60) return "Ahora"
+  if (seconds < 3600) return `Hace ${Math.floor(seconds / 60)} min`
+  if (seconds < 86400) return `Hace ${Math.floor(seconds / 3600)} h`
+  return `Hace ${Math.floor(seconds / 86400)} d`
+}
+
 export default function NotificationBell() {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications()
   const [open, setOpen] = useState(false)
@@ -62,7 +70,7 @@ export default function NotificationBell() {
                 <div className="min-w-0">
                   <p className={`text-sm text-zinc-900 dark:text-zinc-100 ${!n.read ? "font-semibold" : ""}`}>{n.title}</p>
                   <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">{n.message}</p>
-                  <p className="text-[11px] text-zinc-400 dark:text-zinc-500 mt-0.5">{n.time}</p>
+                  <p className="text-[11px] text-zinc-400 dark:text-zinc-500 mt-0.5">{formatTime(n.created_at)}</p>
                 </div>
               </button>
             ))}

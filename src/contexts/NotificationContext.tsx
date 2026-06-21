@@ -1,63 +1,70 @@
 "use client"
 
-import { createContext, useContext, useState, useCallback } from "react"
-
-export interface Notification {
-  id: string
-  title: string
-  message: string
-  time: string
-  read: boolean
-  type: "order" | "message" | "review" | "system"
-}
-
-const initialNotifications: Notification[] = [
-  { id: "n1", title: "Nuevo pedido", message: "Has recibido un nuevo pedido de TechStart HN", time: "Hace 5 min", read: false, type: "order" },
-  { id: "n2", title: "Mensaje nuevo", message: "Carlos Mendoza te envió un mensaje", time: "Hace 15 min", read: false, type: "message" },
-  { id: "n3", title: "Reseña recibida", message: "Ricardo Paz calificó tu servicio con 5 estrellas", time: "Hace 1 hora", read: false, type: "review" },
-  { id: "n4", title: "Pedido completado", message: "El proyecto 'Landing Page' fue marcado como completado", time: "Hace 2 horas", read: true, type: "order" },
-  { id: "n5", title: "Pago recibido", message: "Has recibido un pago de L 1,500.00 HNL", time: "Hace 3 horas", read: true, type: "system" },
-]
+import { createContext, useContext, useState, useCallback, useEffect } from "react"
+import { createClient } from "@/lib/supabase/client"
+import { useAuth } from "./AuthContext"
+import type { AppNotification } from "@/types"
 
 const NotificationContext = createContext<{
-  notifications: Notification[]
+  notifications: AppNotification[]
   unreadCount: number
   markAsRead: (id: string) => void
   markAllAsRead: () => void
-  addNotification: (n: Omit<Notification, "id" | "time" | "read">) => void
 }>({
   notifications: [],
   unreadCount: 0,
   markAsRead: () => {},
   markAllAsRead: () => {},
-  addNotification: () => {},
 })
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
-  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications)
+  const [notifications, setNotifications] = useState<AppNotification[]>([])
+  const { user } = useAuth()
+  const supabase = createClient()
+
+  useEffect(() => {
+    if (!user) { setNotifications([]); return }
+
+    supabase
+      .from("notifications")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(50)
+      .then(({ data }) => {
+        if (data) setNotifications(data as AppNotification[])
+      })
+
+    const channel = supabase
+      .channel("notifications")
+      .on("postgres_changes", {
+        event: "INSERT",
+        schema: "public",
+        table: "notifications",
+        filter: `user_id=eq.${user.id}`,
+      }, (payload) => {
+        setNotifications((prev) => [payload.new as AppNotification, ...prev])
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [user])
 
   const unreadCount = notifications.filter((n) => !n.read).length
 
-  const markAsRead = useCallback((id: string) => {
+  const markAsRead = useCallback(async (id: string) => {
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)))
+    await supabase.from("notifications").update({ read: true }).eq("id", id)
   }, [])
 
-  const markAllAsRead = useCallback(() => {
+  const markAllAsRead = useCallback(async () => {
+    if (!user) return
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
-  }, [])
-
-  const addNotification = useCallback((n: Omit<Notification, "id" | "time" | "read">) => {
-    const newN: Notification = {
-      ...n,
-      id: `n${Date.now()}`,
-      time: "Ahora",
-      read: false,
-    }
-    setNotifications((prev) => [newN, ...prev])
-  }, [])
+    await supabase.from("notifications").update({ read: true }).eq("user_id", user.id).is("read", false)
+  }, [user])
 
   return (
-    <NotificationContext.Provider value={{ notifications, unreadCount, markAsRead, markAllAsRead, addNotification }}>
+    <NotificationContext.Provider value={{ notifications, unreadCount, markAsRead, markAllAsRead }}>
       {children}
     </NotificationContext.Provider>
   )
