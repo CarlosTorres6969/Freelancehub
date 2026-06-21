@@ -7,15 +7,36 @@ import AnimatedSection from "./AnimatedSection"
 import TiltCard from "./TiltCard"
 import type { Category } from "@/types"
 
-const emojiGradients: Record<string, string> = {
-  "🌐": "from-blue-500 to-cyan-500",
-  "🎨": "from-pink-500 to-rose-500",
-  "📊": "from-amber-500 to-orange-500",
-  "✍️": "from-emerald-500 to-teal-500",
-  "🎬": "from-red-500 to-rose-500",
-  "🎵": "from-violet-500 to-purple-500",
-  "💻": "from-indigo-500 to-blue-500",
-  "💼": "from-zinc-600 to-zinc-800",
+const gradientMap: Record<string, string> = {
+  web: "from-blue-500 to-cyan-500",
+  diseño: "from-pink-500 to-rose-500",
+  marketing: "from-amber-500 to-orange-500",
+  redacción: "from-emerald-500 to-teal-500",
+  video: "from-red-500 to-rose-500",
+  música: "from-violet-500 to-purple-500",
+  programación: "from-indigo-500 to-blue-500",
+  consultoría: "from-zinc-600 to-zinc-800",
+}
+
+function getGradient(slug: string): string {
+  for (const [key, value] of Object.entries(gradientMap)) {
+    if (slug.includes(key)) return value
+  }
+  return "from-indigo-500 to-purple-500"
+}
+
+function firstLetter(slug: string): string {
+  const map: Record<string, string> = {
+    "desarrollo-web": "DW",
+    "diseno-grafico": "DG",
+    "marketing-digital": "MD",
+    redaccion: "RT",
+    "video-animacion": "VA",
+    "musica-audio": "MA",
+    "programacion-tech": "PT",
+    consultoria: "CO",
+  }
+  return map[slug] || slug.slice(0, 2).toUpperCase()
 }
 
 export default function Categories() {
@@ -33,7 +54,7 @@ export default function Categories() {
   }, [])
 
   return (
-    <section className="py-20 sm:py-28 bg-muted/50 relative overflow-hidden" style={{ perspective: "1000px" }}>
+    <section className="py-20 sm:py-28 bg-muted/50 relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-purple-50 via-transparent to-transparent opacity-50" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
@@ -54,14 +75,14 @@ export default function Categories() {
               <Link href={`/marketplace?category=${category.slug}`}>
                 <TiltCard tiltDegree={4} glare={true} scale={1.03}>
                   <div className="relative flex flex-col items-center gap-3 p-6 rounded-2xl border border-card-border bg-card-bg hover:border-transparent transition-colors duration-300 overflow-hidden">
-                    <div className={`absolute inset-0 bg-gradient-to-br ${emojiGradients[category.icon] || "from-zinc-500 to-zinc-700"} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
-                    <span className="text-4xl hover:scale-110 hover:rotate-6 transition-all duration-300" style={{ transform: "translateZ(20px)" }}>
-                      {category.icon}
-                    </span>
-                    <span className="font-medium text-foreground text-sm text-center" style={{ transform: "translateZ(15px)" }}>
+                    <div className={`absolute inset-0 bg-gradient-to-br ${getGradient(category.slug)} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
+                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${getGradient(category.slug)} flex items-center justify-center text-white font-bold text-lg shadow-sm`}>
+                      {firstLetter(category.slug)}
+                    </div>
+                    <span className="font-medium text-foreground text-sm text-center">
                       {category.name}
                     </span>
-                    <span className="text-xs text-muted-fg" style={{ transform: "translateZ(10px)" }}>
+                    <span className="text-xs text-muted-fg">
                       {category.services_count} servicios
                     </span>
                   </div>
