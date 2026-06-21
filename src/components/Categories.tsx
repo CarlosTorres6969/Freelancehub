@@ -5,38 +5,28 @@ import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 import AnimatedSection from "./AnimatedSection"
 import TiltCard from "./TiltCard"
+import {
+  Globe,
+  Palette,
+  TrendingUp,
+  PenTool,
+  Clapperboard,
+  Music,
+  Code,
+  Briefcase,
+} from "lucide-react"
 import type { Category } from "@/types"
+import type { LucideIcon } from "lucide-react"
 
-const gradientMap: Record<string, string> = {
-  web: "from-blue-500 to-cyan-500",
-  diseño: "from-pink-500 to-rose-500",
-  marketing: "from-amber-500 to-orange-500",
-  redacción: "from-emerald-500 to-teal-500",
-  video: "from-red-500 to-rose-500",
-  música: "from-violet-500 to-purple-500",
-  programación: "from-indigo-500 to-blue-500",
-  consultoría: "from-zinc-600 to-zinc-800",
-}
-
-function getGradient(slug: string): string {
-  for (const [key, value] of Object.entries(gradientMap)) {
-    if (slug.includes(key)) return value
-  }
-  return "from-indigo-500 to-purple-500"
-}
-
-function firstLetter(slug: string): string {
-  const map: Record<string, string> = {
-    "desarrollo-web": "DW",
-    "diseno-grafico": "DG",
-    "marketing-digital": "MD",
-    redaccion: "RT",
-    "video-animacion": "VA",
-    "musica-audio": "MA",
-    "programacion-tech": "PT",
-    consultoria: "CO",
-  }
-  return map[slug] || slug.slice(0, 2).toUpperCase()
+const icons: Record<string, { icon: LucideIcon; gradient: string }> = {
+  "desarrollo-web":     { icon: Globe, gradient: "from-blue-500 to-cyan-500" },
+  "diseno-grafico":     { icon: Palette, gradient: "from-pink-500 to-rose-500" },
+  "marketing-digital":  { icon: TrendingUp, gradient: "from-amber-500 to-orange-500" },
+  redaccion:            { icon: PenTool, gradient: "from-emerald-500 to-teal-500" },
+  "video-animacion":    { icon: Clapperboard, gradient: "from-red-500 to-rose-500" },
+  "musica-audio":       { icon: Music, gradient: "from-violet-500 to-purple-500" },
+  "programacion-tech":  { icon: Code, gradient: "from-indigo-500 to-blue-500" },
+  consultoria:          { icon: Briefcase, gradient: "from-zinc-600 to-zinc-800" },
 }
 
 export default function Categories() {
@@ -70,26 +60,30 @@ export default function Categories() {
         </AnimatedSection>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {categories.map((category, index) => (
-            <AnimatedSection key={category.id} delay={index * 80}>
-              <Link href={`/marketplace?category=${category.slug}`}>
-                <TiltCard tiltDegree={4} glare={true} scale={1.03}>
-                  <div className="relative flex flex-col items-center gap-3 p-6 rounded-2xl border border-card-border bg-card-bg hover:border-transparent transition-colors duration-300 overflow-hidden">
-                    <div className={`absolute inset-0 bg-gradient-to-br ${getGradient(category.slug)} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
-                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${getGradient(category.slug)} flex items-center justify-center text-white font-bold text-lg shadow-sm`}>
-                      {firstLetter(category.slug)}
+          {categories.map((category, index) => {
+            const cfg = icons[category.slug] || icons["consultoria"]
+            const IconComponent = cfg.icon
+            return (
+              <AnimatedSection key={category.id} delay={index * 80}>
+                <Link href={`/marketplace?category=${category.slug}`}>
+                  <TiltCard tiltDegree={4} glare={true} scale={1.03}>
+                    <div className="relative flex flex-col items-center gap-3 p-6 rounded-2xl border border-card-border bg-card-bg hover:border-transparent transition-colors duration-300 overflow-hidden">
+                      <div className={`absolute inset-0 bg-gradient-to-br ${cfg.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
+                      <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${cfg.gradient} flex items-center justify-center text-white shadow-sm`}>
+                        <IconComponent className="w-7 h-7" strokeWidth={1.5} />
+                      </div>
+                      <span className="font-medium text-foreground text-sm text-center">
+                        {category.name}
+                      </span>
+                      <span className="text-xs text-muted-fg">
+                        {category.services_count} servicios
+                      </span>
                     </div>
-                    <span className="font-medium text-foreground text-sm text-center">
-                      {category.name}
-                    </span>
-                    <span className="text-xs text-muted-fg">
-                      {category.services_count} servicios
-                    </span>
-                  </div>
-                </TiltCard>
-              </Link>
-            </AnimatedSection>
-          ))}
+                  </TiltCard>
+                </Link>
+              </AnimatedSection>
+            )
+          })}
         </div>
       </div>
     </section>
