@@ -36,6 +36,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# dev server artifacts
+dev_output.txt
+dev_error.txt
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
