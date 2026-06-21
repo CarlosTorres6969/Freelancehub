@@ -77,7 +77,7 @@ export default function Chatbot() {
   return (
     <>
       {isOpen && (
-        <div className="fixed bottom-20 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-96 h-[500px] max-h-[70vh] bg-white rounded-2xl shadow-2xl border border-zinc-200 flex flex-col z-50 overflow-hidden">
+        <div className="fixed bottom-20 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-96 h-[500px] max-h-[70vh] bg-card-bg rounded-2xl shadow-2xl border border-card-border flex flex-col z-50 overflow-hidden">
           <div className="flex items-center justify-between p-4 border-b border-zinc-100 bg-zinc-900 text-white">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
@@ -87,7 +87,7 @@ export default function Chatbot() {
               </div>
               <div>
                 <div className="font-medium text-sm">Asistente FH</div>
-                <div className="text-xs text-zinc-300">En línea</div>
+                <div className="text-xs text-white/60">En línea</div>
               </div>
             </div>
             <button
@@ -111,7 +111,7 @@ export default function Chatbot() {
                   className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
                     msg.role === "user"
                       ? "bg-zinc-900 text-white rounded-br-md"
-                      : "bg-zinc-100 text-zinc-700 rounded-bl-md"
+                      : "bg-muted text-foreground rounded-bl-md"
                   }`}
                 >
                   {msg.content}

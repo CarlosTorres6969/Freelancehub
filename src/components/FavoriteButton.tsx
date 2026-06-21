@@ -16,7 +16,7 @@ export default function FavoriteButton({ serviceId }: { serviceId: string }) {
       className={`w-8 h-8 rounded-full flex items-center justify-center transition-all backdrop-blur-sm ${
         fav
           ? "bg-red-500 text-white shadow-lg"
-          : "bg-white/80 text-zinc-600 hover:bg-white"
+          : "bg-card-bg/80 text-muted-fg hover:bg-accent"
       }`}
       aria-label={fav ? "Quitar de favoritos" : "Agregar a favoritos"}
     >

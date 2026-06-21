@@ -45,7 +45,7 @@ export default function Testimonials() {
                     {Array.from({ length: 5 }).map((_, i) => (
                       <svg
                         key={i}
-                        className={`w-4 h-4 transition-all duration-300 ${i < testimonial.rating ? "text-amber-400" : "text-zinc-200"}`}
+                        className={`w-4 h-4 transition-all duration-300 ${i < testimonial.rating ? "text-amber-400" : "text-zinc-300 dark:text-zinc-600"}`}
                         fill="currentColor"
                         viewBox="0 0 20 20"
                       >
