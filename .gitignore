@@ -43,3 +43,5 @@ dev_error.txt
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+.vercel
