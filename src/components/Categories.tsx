@@ -1,22 +1,11 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 import AnimatedSection from "./AnimatedSection"
 import TiltCard from "./TiltCard"
 import type { Category } from "@/types"
-
-const iconSvgs: Record<string, string> = {
-  "🌐": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-full h-full"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>',
-  "🎨": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-full h-full"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 00-7.07 17.07 4 4 0 005.66-5.66 4 4 0 015.66-5.66 4 4 0 005.66 5.66A10 10 0 0012 2z"/><path d="M12 22v-4"/></svg>',
-  "📊": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-full h-full"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>',
-  "✍️": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-full h-full"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
-  "🎬": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-full h-full"><rect x="2" y="2" width="20" height="20" rx="2.18"/><path d="M8 2v20M16 2v20M2 8h20M2 16h20"/></svg>',
-  "🎵": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-full h-full"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
-  "💻": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-full h-full"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>',
-  "💼": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-full h-full"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>',
-}
 
 const emojiGradients: Record<string, string> = {
   "🌐": "from-blue-500 to-cyan-500",
@@ -27,6 +16,52 @@ const emojiGradients: Record<string, string> = {
   "🎵": "from-violet-500 to-purple-500",
   "💻": "from-indigo-500 to-blue-500",
   "💼": "from-zinc-600 to-zinc-800",
+}
+
+function CategoryIcon({ icon }: { icon: string }) {
+  const svgMap: Record<string, React.ReactNode> = {
+    "🌐": (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-full h-full">
+        <circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
+      </svg>
+    ),
+    "🎨": (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-full h-full">
+        <circle cx="12" cy="12" r="10" /><path d="M12 2a10 10 0 00-7.07 17.07 4 4 0 005.66-5.66 4 4 0 015.66-5.66 4 4 0 005.66 5.66A10 10 0 0012 2z" /><path d="M12 22v-4" />
+      </svg>
+    ),
+    "📊": (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-full h-full">
+        <path d="M18 20V10M12 20V4M6 20v-6" />
+      </svg>
+    ),
+    "✍️": (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-full h-full">
+        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+      </svg>
+    ),
+    "🎬": (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-full h-full">
+        <rect x="2" y="2" width="20" height="20" rx="2.18" /><path d="M8 2v20M16 2v20M2 8h20M2 16h20" />
+      </svg>
+    ),
+    "🎵": (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-full h-full">
+        <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
+      </svg>
+    ),
+    "💻": (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-full h-full">
+        <rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" />
+      </svg>
+    ),
+    "💼": (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-full h-full">
+        <rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" />
+      </svg>
+    ),
+  }
+  return <>{svgMap[icon] || <span className="text-2xl">{icon}</span>}</>
 }
 
 export default function Categories() {
@@ -66,11 +101,9 @@ export default function Categories() {
                 <TiltCard tiltDegree={4} glare={true} scale={1.03}>
                   <div className="relative flex flex-col items-center gap-3 p-6 rounded-2xl border border-card-border bg-card-bg hover:border-transparent transition-colors duration-300 overflow-hidden">
                     <div className={`absolute inset-0 bg-gradient-to-br ${emojiGradients[category.icon] || "from-zinc-500 to-zinc-700"} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
-                    <span
-                      className="w-10 h-10 flex items-center justify-center hover:scale-110 hover:rotate-6 transition-all duration-300"
-                      style={{ transform: "translateZ(20px)" }}
-                      dangerouslySetInnerHTML={{ __html: iconSvgs[category.icon] || iconSvgs["💼"] }}
-                    />
+                    <span className="w-10 h-10 flex items-center justify-center hover:scale-110 hover:rotate-6 transition-all duration-300" style={{ transform: "translateZ(20px)" }}>
+                      <CategoryIcon icon={category.icon} />
+                    </span>
                     <span className="font-medium text-foreground text-sm text-center" style={{ transform: "translateZ(15px)" }}>
                       {category.name}
                     </span>
