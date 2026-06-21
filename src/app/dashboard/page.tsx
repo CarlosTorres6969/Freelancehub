@@ -158,7 +158,7 @@ export default function DashboardPage() {
                       <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
                         <div
                           className="h-full bg-foreground rounded-full group-hover:bg-indigo-500 transition-colors"
-                          style={{ width: `${Math.min((cat.services_count / 30) * 100, 100)}%` }}
+                          style={{ width: `${Math.min((cat.services_count / Math.max(...categories.map(c => c.services_count), 1)) * 100, 100)}%` }}
                         />
                       </div>
                       <span className="text-sm font-medium text-foreground w-8 text-right">{cat.services_count}</span>

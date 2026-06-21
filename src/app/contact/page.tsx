@@ -88,7 +88,7 @@ export default function ContactPage() {
             <button
               type="submit"
               disabled={sending}
-              className="btn-3d px-6 py-2.5 bg-foreground text-background rounded-xl text-sm font-medium hover:bg-zinc-800 transition-all disabled:opacity-50"
+              className="btn-3d px-6 py-2.5 bg-foreground text-background rounded-xl text-sm font-medium hover:opacity-90 transition-all disabled:opacity-50"
             >
               {sending ? "Enviando..." : "Enviar Mensaje"}
             </button>

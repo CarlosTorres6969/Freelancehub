@@ -128,7 +128,7 @@ function CheckoutContent() {
             <span className={`text-sm ${step >= s ? "text-foreground font-medium" : "text-muted-fg"}`}>
               {s === 1 ? "Revisar" : s === 2 ? "Pagar" : "Confirmado"}
             </span>
-            {s < 3 && <div className="w-8 h-px bg-zinc-200 mx-1" />}
+            {s < 3 && <div className="w-8 h-px bg-card-border mx-1" />}
           </div>
         ))}
       </div>
@@ -166,20 +166,20 @@ function CheckoutContent() {
             <h2 className="font-semibold text-foreground mb-4">Método de pago</h2>
             <div className="space-y-3">
               <label className="flex items-center gap-3 p-3 rounded-xl border border-card-border hover:border-card-border cursor-pointer">
-                <input type="radio" name="payment" defaultChecked className="accent-zinc-900" />
+                <input type="radio" name="payment" defaultChecked className="accent-indigo-500" />
                 <div className="flex items-center gap-2">
                   <svg className="w-8 h-6" viewBox="0 0 50 32"><rect width="50" height="32" rx="4" fill="#1A1F71"/><text x="25" y="20" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">VISA</text></svg>
                   <span className="text-sm text-foreground">Visa **** 4242</span>
                 </div>
               </label>
               <label className="flex items-center gap-3 p-3 rounded-xl border border-card-border hover:border-card-border cursor-pointer">
-                <input type="radio" name="payment" className="accent-zinc-900" />
+                <input type="radio" name="payment" className="accent-indigo-500" />
                 <div className="flex items-center gap-2">
                   <svg className="w-8 h-6" viewBox="0 0 50 32"><rect width="50" height="32" rx="4" fill="#EB001B"/><circle cx="17" cy="16" r="10" fill="#EB001B"/><circle cx="33" cy="16" r="10" fill="#F79E1B"/></svg>
                   <span className="text-sm text-foreground">Mastercard **** 8888</span>
                 </div>
               </label>
-              <button className="flex items-center gap-3 p-3 rounded-xl border border-dashed border-zinc-300 hover:border-zinc-400 cursor-pointer w-full text-left">
+              <button className="flex items-center gap-3 p-3 rounded-xl border border-dashed border-card-border hover:border-accent cursor-pointer w-full text-left">
                 <svg className="w-5 h-5 text-muted-fg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
@@ -190,7 +190,7 @@ function CheckoutContent() {
 
           <button
             onClick={handleConfirm}
-            className="w-full bg-foreground text-background font-semibold py-3.5 rounded-xl hover:bg-zinc-800 transition-colors text-lg"
+            className="w-full bg-foreground text-background font-semibold py-3.5 rounded-xl hover:opacity-90 transition-all text-lg"
           >
             Confirmar y Pagar L {total.toLocaleString()}
           </button>
@@ -225,7 +225,7 @@ function CheckoutContent() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-2 bg-foreground text-background font-semibold px-6 py-3 rounded-xl hover:bg-zinc-800 transition-colors"
+              className="inline-flex items-center gap-2 bg-foreground text-background font-semibold px-6 py-3 rounded-xl hover:opacity-90 transition-all"
             >
               Ir al Dashboard
             </Link>

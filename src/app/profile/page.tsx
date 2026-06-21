@@ -209,7 +209,7 @@ export default function ProfilePage() {
             <button
               onClick={handleSave}
               disabled={loading}
-              className="btn-3d px-6 py-2.5 bg-foreground text-background rounded-xl font-medium text-sm hover:bg-zinc-800 transition-all disabled:opacity-50"
+              className="btn-3d px-6 py-2.5 bg-foreground text-background rounded-xl font-medium text-sm hover:opacity-90 transition-all disabled:opacity-50"
             >
               {loading ? "Guardando..." : "Guardar Cambios"}
             </button>

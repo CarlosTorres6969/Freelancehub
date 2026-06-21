@@ -67,7 +67,7 @@ export default function Categories() {
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {categories.map((category, index) => {
-            const cfg = categoriesMap[category.slug] || categoriesMap["consultoria"]
+            const cfg = categoriesMap[category.slug] || { icon: Briefcase, gradient: "from-zinc-600 to-zinc-800", name: category.name }
             const IconComponent = cfg.icon
             return (
               <AnimatedSection key={category.id} delay={index * 80}>

@@ -41,6 +41,24 @@ BEGIN
     VALUES
       (client1_id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'pedro.ramirez@email.com',  crypt('password123', gen_salt('bf')), NOW(), '{"provider":"email","providers":["email"]}', '{"name":"Pedro Ramírez"}', NOW(), NOW(), false, false);
   END IF;
+
+  -- Add identities records so signInWithPassword works
+  IF NOT EXISTS (SELECT 1 FROM auth.identities WHERE user_id = freelancer1_id AND provider = 'email') THEN
+    INSERT INTO auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at)
+    VALUES (gen_random_uuid(), freelancer1_id, jsonb_build_object('sub', freelancer1_id, 'email', 'maria.garcia@email.com'), 'email', 'maria.garcia@email.com', now(), now(), now());
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM auth.identities WHERE user_id = freelancer2_id AND provider = 'email') THEN
+    INSERT INTO auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at)
+    VALUES (gen_random_uuid(), freelancer2_id, jsonb_build_object('sub', freelancer2_id, 'email', 'juan.perez@email.com'), 'email', 'juan.perez@email.com', now(), now(), now());
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM auth.identities WHERE user_id = freelancer3_id AND provider = 'email') THEN
+    INSERT INTO auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at)
+    VALUES (gen_random_uuid(), freelancer3_id, jsonb_build_object('sub', freelancer3_id, 'email', 'ana.lopez@email.com'), 'email', 'ana.lopez@email.com', now(), now(), now());
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM auth.identities WHERE user_id = client1_id AND provider = 'email') THEN
+    INSERT INTO auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at)
+    VALUES (gen_random_uuid(), client1_id, jsonb_build_object('sub', client1_id, 'email', 'pedro.ramirez@email.com'), 'email', 'pedro.ramirez@email.com', now(), now(), now());
+  END IF;
 END $$;
 
 -- =====================================================

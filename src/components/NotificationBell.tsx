@@ -36,7 +36,7 @@ export default function NotificationBell() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="relative p-2 rounded-lg text-muted-fg hover:text-foreground dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-muted dark:hover:bg-zinc-800 transition-colors"
+        className="relative p-2 rounded-lg text-muted-fg hover:text-foreground hover:bg-accent transition-colors"
         aria-label="Notificaciones"
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -50,9 +50,9 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-xl z-50 animate-fade-in">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-200 dark:border-zinc-700">
-            <span className="font-semibold text-sm text-zinc-900 dark:text-zinc-100">Notificaciones</span>
+        <div className="absolute right-0 mt-2 w-80 bg-card-bg border border-card-border rounded-xl shadow-xl z-50 animate-fade-in">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-card-border">
+            <span className="font-semibold text-sm text-foreground">Notificaciones</span>
             {unreadCount > 0 && (
               <button onClick={markAllAsRead} className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300">
                 Marcar todas leídas
@@ -64,13 +64,13 @@ export default function NotificationBell() {
               <button
                 key={n.id}
                 onClick={() => markAsRead(n.id)}
-                className={`w-full text-left px-4 py-3 flex items-start gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors ${!n.read ? "bg-indigo-50 dark:bg-indigo-950/30" : ""}`}
+                className={`w-full text-left px-4 py-3 flex items-start gap-3 hover:bg-accent transition-colors ${!n.read ? "bg-indigo-50 dark:bg-indigo-950/30" : ""}`}
               >
                 <span className="text-lg shrink-0">{typeIcons[n.type] || "🔔"}</span>
                 <div className="min-w-0">
-                  <p className={`text-sm text-zinc-900 dark:text-zinc-100 ${!n.read ? "font-semibold" : ""}`}>{n.title}</p>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">{n.message}</p>
-                  <p className="text-[11px] text-zinc-400 dark:text-zinc-500 mt-0.5">{formatTime(n.created_at)}</p>
+                  <p className={`text-sm text-foreground ${!n.read ? "font-semibold" : ""}`}>{n.title}</p>
+                  <p className="text-xs text-muted-fg truncate">{n.message}</p>
+                  <p className="text-[11px] text-muted-fg mt-0.5">{formatTime(n.created_at)}</p>
                 </div>
               </button>
             ))}

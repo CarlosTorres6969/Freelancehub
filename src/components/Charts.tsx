@@ -1,6 +1,7 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useEffect, useState } from "react"
+import { useTheme } from "@/contexts/ThemeContext"
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -18,9 +19,6 @@ import { Line, Bar, Doughnut } from "react-chartjs-2"
 import type { Order, Category } from "@/types"
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend, Filler)
-
-ChartJS.defaults.color = "#a1a1aa"
-ChartJS.defaults.borderColor = "rgba(0,0,0,0.06)"
 
 function groupByMonth(items: { created_at: string }[], monthsBack: number) {
   const groups: Record<string, number> = {}
@@ -67,7 +65,24 @@ const monthLabels = (monthsBack: number) => {
   return labels
 }
 
+function useChartColors() {
+  const { theme } = useTheme()
+  const [colors, setColors] = useState({ mutedFg: "#a1a1aa", cardBorder: "rgba(0,0,0,0.06)" })
+
+  useEffect(() => {
+    const style = getComputedStyle(document.documentElement)
+    const mutedFg = style.getPropertyValue("--muted-fg").trim() || "#a1a1aa"
+    const cardBorder = style.getPropertyValue("--card-border").trim() || "#e4e4e7"
+    setColors({ mutedFg, cardBorder })
+    ChartJS.defaults.color = mutedFg
+    ChartJS.defaults.borderColor = cardBorder
+  }, [theme])
+
+  return colors
+}
+
 export function IncomeChart({ orders }: { orders: Order[] }) {
+  const { mutedFg, cardBorder } = useChartColors()
   const data = useMemo(() => ({
     labels: monthLabels(6),
     datasets: [
@@ -91,7 +106,7 @@ export function IncomeChart({ orders }: { orders: Order[] }) {
         plugins: { legend: { display: false } },
         scales: {
           x: { grid: { display: false } },
-          y: { grid: { color: "rgba(0,0,0,0.06)" }, ticks: { callback: (v: string | number) => `L ${v}` } },
+          y: { grid: { color: cardBorder }, ticks: { callback: (v: string | number) => `L ${v}` } },
         },
       }} />
     </div>
@@ -99,6 +114,7 @@ export function IncomeChart({ orders }: { orders: Order[] }) {
 }
 
 export function ProjectsChart({ orders }: { orders: Order[] }) {
+  const { mutedFg, cardBorder } = useChartColors()
   const data = useMemo(() => ({
     labels: monthLabels(6),
     datasets: [
@@ -119,7 +135,7 @@ export function ProjectsChart({ orders }: { orders: Order[] }) {
         plugins: { legend: { display: false } },
         scales: {
           x: { grid: { display: false } },
-          y: { grid: { color: "rgba(0,0,0,0.06)" } },
+          y: { grid: { color: cardBorder } },
         },
       }} />
     </div>

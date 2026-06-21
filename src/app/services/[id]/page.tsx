@@ -82,7 +82,7 @@ export default async function ServiceDetailPage({
           {service.freelancer && (
             <Link
               href={`/freelancers/${service.freelancer.id}`}
-              className="block p-6 rounded-2xl border border-card-border bg-card-bg hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-md transition-all group"
+              className="block p-6 rounded-2xl border border-card-border bg-card-bg hover:border-accent hover:shadow-md transition-all group"
             >
               <h2 className="font-semibold text-foreground mb-4">Sobre el freelancer</h2>
               <div className="flex items-center gap-4 mb-4">
@@ -96,7 +96,7 @@ export default async function ServiceDetailPage({
                 <div>
                   <div className="font-semibold text-foreground group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                     {service.freelancer.name}
-                    <span className="inline-flex ml-2 text-xs text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full font-normal">
+                    <span className="inline-flex ml-2 text-xs text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 dark:text-emerald-400 px-2 py-0.5 rounded-full font-normal">
                       Ver perfil →
                     </span>
                   </div>
@@ -189,19 +189,19 @@ export default async function ServiceDetailPage({
 
             <div className="space-y-3 mb-6">
               <div className="flex items-center gap-2 text-sm text-muted-fg">
-                <svg className="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-muted-fg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 Entrega en {service.delivery_time}
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-fg">
-                <svg className="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-muted-fg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 21h18M3 10h18M3 7l9-4 9 4M4 10v11m16-11v11" />
                 </svg>
                 {service.sales} vendidos
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-fg">
-                <svg className="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-muted-fg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 {service.reviews_count} reseñas positivas
