@@ -137,14 +137,14 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {activeTab === "overview" && (
+          {activeTab === "overview" && (
         <AnimatedSection key="overview">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <IncomeChart />
-            <ProjectsChart />
+            <IncomeChart orders={orders} />
+            <ProjectsChart orders={orders} />
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            <CategoryChart />
+            <CategoryChart categories={categories} orders={orders} />
             <div className="lg:col-span-2 p-6 rounded-xl border border-card-border bg-card-bg">
               <h2 className="font-semibold text-foreground mb-4">Resumen de Categorías</h2>
               <div className="space-y-3">

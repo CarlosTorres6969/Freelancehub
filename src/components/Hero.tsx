@@ -1,9 +1,34 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Link from "next/link"
+import { createClient } from "@/lib/supabase/client"
 import FloatingParticles3D from "./HeroParticles"
 
 export default function Hero() {
+  const [stats, setStats] = useState({ projects: "—", freelancers: "—", rating: "—", satisfaction: "98%" })
+  const supabase = createClient()
+
+  useEffect(() => {
+    async function loadStats() {
+      const [{ count: projects }, { count: freelancers }, { data: ratingData }] = await Promise.all([
+        supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "completed"),
+        supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "freelancer"),
+        supabase.from("services").select("rating"),
+      ])
+      const avgRating = ratingData && ratingData.length > 0
+        ? (ratingData.reduce((sum, s) => sum + s.rating, 0) / ratingData.length).toFixed(1)
+        : "4.8"
+      setStats({
+        projects: `${projects ?? 0}+`,
+        freelancers: `${freelancers ?? 0}+`,
+        rating: avgRating,
+        satisfaction: "98%",
+      })
+    }
+    loadStats()
+  }, [])
+
   return (
     <section className="relative overflow-hidden bg-foreground text-background" style={{ perspective: "1200px" }}>
       <div
@@ -80,10 +105,10 @@ export default function Hero() {
           style={{ animationDuration: "1s", animationDelay: "0.6s", opacity: 0, animationFillMode: "forwards" }}
         >
           {[
-            { value: "500+", label: "Proyectos Completados" },
-            { value: "200+", label: "Freelancers Activos" },
-            { value: "4.8", label: "Calificación Promedio" },
-            { value: "98%", label: "Clientes Satisfechos" },
+            { value: stats.projects, label: "Proyectos Completados" },
+            { value: stats.freelancers, label: "Freelancers Activos" },
+            { value: stats.rating, label: "Calificación Promedio" },
+            { value: stats.satisfaction, label: "Clientes Satisfechos" },
           ].map((stat, i) => (
             <div key={i} className="text-center group">
               <div className="text-3xl sm:text-4xl font-bold text-white group-hover:text-gradient transition-all duration-300">
