@@ -226,6 +226,8 @@ CREATE POLICY "conversations_select_participant" ON conversations
   FOR SELECT USING (auth.uid() = ANY(participant_ids));
 CREATE POLICY "conversations_insert_auth" ON conversations
   FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "conversations_update_participant" ON conversations
+  FOR UPDATE USING (auth.uid() = ANY(participant_ids));
 
 -- Messages: solo participantes de la conversación
 CREATE POLICY "messages_select_participant" ON messages

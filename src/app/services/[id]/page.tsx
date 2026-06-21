@@ -77,7 +77,7 @@ export default async function ServiceDetailPage({
             <p className="text-lg text-muted-fg leading-relaxed">{service.long_description}</p>
           </div>
 
-          <ImageGallery />
+          <ImageGallery images={service.images} />
 
           {service.freelancer && (
             <Link
