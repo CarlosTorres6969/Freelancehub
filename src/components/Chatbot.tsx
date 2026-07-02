@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useEffect, useRef, useState } from "react"
+import { Bot, MessageCircle, Send, X } from "lucide-react"
 
 interface Message {
   role: "user" | "bot"
@@ -10,23 +11,24 @@ interface Message {
 const initialMessages: Message[] = [
   {
     role: "bot",
-    content: "¡Hola! Soy el asistente de FreelanceHub. ¿En qué puedo ayudarte hoy?",
+    content: "¡Hola! Soy el asistente de FreelanceHub. Puedo ayudarte a encontrar servicios, entender pagos o preparar tu primer proyecto.",
   },
 ]
 
 const responses: Record<string, string> = {
-  "hola": "¡Hola! ¿Cómo puedo ayudarte? Puedes preguntarme sobre servicios, freelancers, o cómo funciona la plataforma.",
-  "servicios": "Ofrecemos servicios en categorías como: Desarrollo Web, Diseño Gráfico, Marketing Digital, Redacción, Video y Animación, y más. ¡Explora nuestro Marketplace!",
-  "freelancer": "Para convertirte en freelancer, regístrate en la plataforma, completa tu perfil y comienza a publicar tus servicios. Es gratis.",
-  "pago": "Los pagos se procesan de forma segura a través de nuestra plataforma. El pago se libera al freelancer cuando confirmes que el trabajo está completo.",
-  "tiempo": "Los tiempos de entrega varían según el servicio. Puedes ver el tiempo estimado en cada servicio del Marketplace.",
-  "precio": "Los precios están en Lempiras (LPS) y son fijados por cada freelancer. Puedes filtrar por precio en el Marketplace para encontrar opciones que se ajusten a tu presupuesto.",
-  "contacto": "Puedes contactar directamente con los freelancers a través del chat en cada servicio antes de contratar.",
-  "gracias": "¡De nada! Si tienes más preguntas, aquí estoy para ayudarte.",
-  "adiós": "¡Hasta luego! Que tengas un excelente día.",
+  hola: "¡Hola! Puedes preguntarme sobre servicios, freelancers, pagos o tiempos de entrega.",
+  servicios: "Hay servicios de desarrollo web, diseño gráfico, marketing digital, redacción, video, programación, música y consultoría.",
+  freelancer: "Para trabajar como freelancer, crea tu cuenta, completa tu perfil y publica servicios con precios, tiempos y entregables claros.",
+  pago: "Los pagos se gestionan dentro de la plataforma para proteger a cliente y freelancer durante la entrega.",
+  tiempo: "Los tiempos de entrega dependen del servicio. Cada publicación muestra el plazo estimado antes de contratar.",
+  precio: "Los precios están en Lempiras y los define cada freelancer. Puedes filtrar por presupuesto en el Marketplace.",
+  contacto: "Puedes contactar freelancers desde cada servicio antes de contratar para alinear alcance, tiempos y dudas.",
+  gracias: "¡Con gusto! Aquí sigo si necesitas aterrizar el proyecto.",
+  adios: "¡Hasta luego! Que tengas un gran día.",
+  adiós: "¡Hasta luego! Que tengas un gran día.",
 }
 
-const defaultResponse = "No tengo una respuesta preparada para eso. ¿Puedes preguntarme sobre servicios, freelancers, pagos o tiempos de entrega?"
+const defaultResponse = "Puedo ayudarte con servicios, freelancers, pagos, tiempos de entrega o el proceso de contratación."
 
 function getBotResponse(input: string): string {
   const q = input.toLowerCase().trim()
@@ -38,7 +40,7 @@ function getBotResponse(input: string): string {
   }
 
   if (q.includes("cómo") || q.includes("como")) {
-    return "¿Te gustaría saber cómo funciona la plataforma, cómo contratar un servicio o cómo registrarte como freelancer?"
+    return "Puedes explorar servicios, revisar perfiles, conversar con freelancers y contratar desde el Marketplace."
   }
 
   return defaultResponse
@@ -61,10 +63,10 @@ export default function Chatbot() {
     setMessages((prev) => [...prev, { role: "user", content: text }])
     setInput("")
 
-    setTimeout(() => {
+    window.setTimeout(() => {
       const botReply = getBotResponse(text)
       setMessages((prev) => [...prev, { role: "bot", content: botReply }])
-    }, 500)
+    }, 450)
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -77,41 +79,34 @@ export default function Chatbot() {
   return (
     <>
       {isOpen && (
-        <div className="fixed bottom-20 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-96 h-[500px] max-h-[70vh] bg-card-bg rounded-2xl shadow-2xl border border-card-border flex flex-col z-50 overflow-hidden">
-          <div className="flex items-center justify-between p-4 border-b border-zinc-100 bg-zinc-900 text-white">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
+        <div className="fixed bottom-20 right-4 z-50 flex h-[500px] max-h-[70vh] w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-lg border border-card-border bg-card-bg shadow-2xl shadow-black/20 backdrop-blur-xl sm:right-6 sm:w-96">
+          <div className="flex items-center justify-between border-b border-card-border bg-foreground p-4 text-background">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-background/10">
+                <Bot className="h-5 w-5" strokeWidth={1.8} />
               </div>
               <div>
-                <div className="font-medium text-sm">Asistente FH</div>
-                <div className="text-xs text-white/60">En línea</div>
+                <div className="text-sm font-bold">Asistente FH</div>
+                <div className="text-xs text-background/60">En línea</div>
               </div>
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="p-1 hover:bg-white/10 rounded-lg transition-colors"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-background/70 transition-colors hover:bg-background/10 hover:text-background"
               aria-label="Cerrar chat"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <X className="h-5 w-5" />
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          <div className="flex-1 space-y-3 overflow-y-auto p-4">
             {messages.map((msg, index) => (
-              <div
-                key={index}
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-              >
+              <div key={index} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                 <div
-                  className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                  className={`max-w-[85%] rounded-lg px-4 py-2.5 text-sm leading-relaxed ${
                     msg.role === "user"
-                      ? "bg-zinc-900 text-white rounded-br-md"
-                      : "bg-muted text-foreground rounded-bl-md"
+                      ? "bg-foreground text-background"
+                      : "bg-accent text-foreground"
                   }`}
                 >
                   {msg.content}
@@ -121,7 +116,7 @@ export default function Chatbot() {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="p-3 border-t border-zinc-100">
+          <div className="border-t border-card-border p-3">
             <div className="flex gap-2">
               <input
                 type="text"
@@ -129,17 +124,15 @@ export default function Chatbot() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Escribe un mensaje..."
-                className="flex-1 px-4 py-2.5 rounded-xl border border-zinc-200 focus:border-zinc-400 focus:outline-none text-sm"
+                className="min-w-0 flex-1 rounded-lg border border-card-border bg-background px-4 py-2.5 text-sm text-foreground outline-none transition-all placeholder:text-muted-fg focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim()}
-                className="px-4 py-2.5 bg-zinc-900 text-white rounded-xl hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-fg transition-transform hover:scale-[1.03] disabled:cursor-not-allowed disabled:opacity-50"
                 aria-label="Enviar"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19V5m0 0l-7 7m7-7l7 7" />
-                </svg>
+                <Send className="h-4 w-4" strokeWidth={2} />
               </button>
             </div>
           </div>
@@ -148,19 +141,13 @@ export default function Chatbot() {
 
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-4 right-4 sm:right-6 w-14 h-14 rounded-full bg-zinc-900 text-white shadow-lg hover:bg-zinc-800 transition-all hover:scale-110 hover:shadow-xl hover:shadow-indigo-500/20 animate-fade-in flex items-center justify-center z-50 group overflow-hidden"
+        className="fixed bottom-4 right-4 z-50 flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-foreground text-background shadow-2xl shadow-primary/20 transition-transform hover:scale-110 sm:right-6"
         aria-label={isOpen ? "Cerrar chat" : "Abrir chat"}
       >
-        <span className="absolute inset-0 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full" />
-        {isOpen ? (
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        ) : (
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-          </svg>
-        )}
+        <span className="absolute inset-0 bg-gradient-to-br from-cyan-400 via-violet-500 to-rose-400 opacity-0 transition-opacity duration-300 hover:opacity-100" />
+        <span className="relative z-10">
+          {isOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
+        </span>
       </button>
     </>
   )

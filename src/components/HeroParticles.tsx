@@ -10,7 +10,7 @@ function FloatingParticles3D() {
   const particleRefs = useRef<(HTMLDivElement | null)[]>([])
 
   useEffect(() => {
-    setMounted(true)
+    queueMicrotask(() => setMounted(true))
     const handleMouseMove = (e: MouseEvent) => {
       if (sectionRef.current) {
         const rect = sectionRef.current.getBoundingClientRect()
@@ -47,11 +47,11 @@ function FloatingParticles3D() {
     { count: 8, size: [20, 50], color: "bg-indigo-500/20", depth: 0.3 },
     { count: 6, size: [30, 70], color: "bg-purple-500/15", depth: 0.5 },
     { count: 4, size: [50, 100], color: "bg-emerald-500/10", depth: 0.7 },
-    { count: 3, size: [80, 150], color: "bg-pink-500/8", depth: 0.9 },
+    { count: 3, size: [80, 150], color: "bg-pink-500/10", depth: 0.9 },
   ]
 
   const allParticles = layers.flatMap((layer) =>
-    Array.from({ length: layer.count }).map((_, i) => ({
+    Array.from({ length: layer.count }).map(() => ({
       depth: layer.depth,
       top: 10 + Math.random() * 80,
       left: 10 + Math.random() * 80,

@@ -28,11 +28,14 @@ export default function DashboardPage() {
   const [myServices, setMyServices] = useState<Service[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
 
   useEffect(() => {
-    if (!user) { setLoading(false); return }
+    if (!user) {
+      queueMicrotask(() => setLoading(false))
+      return
+    }
     const userId = user.id
+    const supabase = createClient()
 
     async function load() {
       const [ordersRes, servicesRes, categoriesRes] = await Promise.all([

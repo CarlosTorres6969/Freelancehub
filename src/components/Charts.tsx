@@ -73,16 +73,18 @@ function useChartColors() {
     const style = getComputedStyle(document.documentElement)
     const mutedFg = style.getPropertyValue("--muted-fg").trim() || "#a1a1aa"
     const cardBorder = style.getPropertyValue("--card-border").trim() || "#e4e4e7"
-    setColors({ mutedFg, cardBorder })
-    ChartJS.defaults.color = mutedFg
-    ChartJS.defaults.borderColor = cardBorder
+    queueMicrotask(() => {
+      setColors({ mutedFg, cardBorder })
+      ChartJS.defaults.color = mutedFg
+      ChartJS.defaults.borderColor = cardBorder
+    })
   }, [theme])
 
   return colors
 }
 
 export function IncomeChart({ orders }: { orders: Order[] }) {
-  const { mutedFg, cardBorder } = useChartColors()
+  const { cardBorder } = useChartColors()
   const data = useMemo(() => ({
     labels: monthLabels(6),
     datasets: [
@@ -114,7 +116,7 @@ export function IncomeChart({ orders }: { orders: Order[] }) {
 }
 
 export function ProjectsChart({ orders }: { orders: Order[] }) {
-  const { mutedFg, cardBorder } = useChartColors()
+  const { cardBorder } = useChartColors()
   const data = useMemo(() => ({
     labels: monthLabels(6),
     datasets: [
@@ -145,8 +147,9 @@ export function ProjectsChart({ orders }: { orders: Order[] }) {
 export function CategoryChart({ categories, orders }: { categories: Category[]; orders: Order[] }) {
   const data = useMemo(() => {
     const counts: Record<string, number> = {}
+    type OrderWithServiceCategory = Order & { service?: { category?: { name?: string } } }
     for (const o of orders) {
-      const catName = (o.service as any)?.category?.name ?? "Otros"
+      const catName = (o as OrderWithServiceCategory).service?.category?.name ?? "Otros"
       counts[catName] = (counts[catName] || 0) + 1
     }
     if (Object.keys(counts).length === 0) {

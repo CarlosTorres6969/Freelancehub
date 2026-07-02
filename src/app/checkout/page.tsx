@@ -2,31 +2,41 @@
 
 import { Suspense, useState, useEffect } from "react"
 import Link from "next/link"
-import { useRouter, useSearchParams } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
+import { useSearchParams } from "next/navigation"
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client"
+import { getDemoServiceById } from "@/lib/demo-data"
 import { useAuth } from "@/contexts/AuthContext"
 import type { Service } from "@/types"
 
 function CheckoutContent() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const { user } = useAuth()
-  const [service, setService] = useState<Service | null>(null)
-  const [step, setStep] = useState<1 | 2 | 3>(1)
-  const [loading, setLoading] = useState(true)
-  const supabase = createClient()
-
   const serviceId = searchParams.get("serviceId")
+  const [service, setService] = useState<Service | null>(() => serviceId ? getDemoServiceById(serviceId) : null)
+  const [step, setStep] = useState<1 | 2 | 3>(1)
+  const [loading, setLoading] = useState(isSupabaseConfigured && Boolean(serviceId))
 
   useEffect(() => {
-    if (!serviceId) { setLoading(false); return }
+    if (!serviceId) {
+      queueMicrotask(() => setLoading(false))
+      return
+    }
+    const demoService = getDemoServiceById(serviceId)
+    if (!isSupabaseConfigured) {
+      queueMicrotask(() => {
+        setService(demoService)
+        setLoading(false)
+      })
+      return
+    }
+    const supabase = createClient()
     supabase
       .from("services")
       .select("*, freelancer:profiles!services_freelancer_id_fkey(*)")
       .eq("id", serviceId)
-      .single()
+      .maybeSingle()
       .then(({ data }) => {
-        setService(data)
+        setService((data as Service | null) ?? demoService)
         setLoading(false)
       })
   }, [serviceId])
@@ -35,9 +45,15 @@ function CheckoutContent() {
     if (!user || !service) return
     setStep(2)
 
+    if (!isSupabaseConfigured) {
+      setTimeout(() => setStep(3), 800)
+      return
+    }
+
     const price = service.price
     const serviceFee = Math.round(price * 0.05 * 100) / 100
     const total = price + serviceFee
+    const supabase = createClient()
 
     const { error } = await supabase.from("orders").insert({
       service_id: service.id,

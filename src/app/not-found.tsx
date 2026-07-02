@@ -1,27 +1,32 @@
 import Link from "next/link"
+import { ArrowLeft, SearchX } from "lucide-react"
 
 export default function NotFound() {
   return (
-    <div className="min-h-[70vh] flex items-center justify-center px-4">
-      <div className="text-center max-w-md">
-        <div className="text-8xl mb-6 animate-bounce">🚀</div>
-        <h1 className="text-6xl font-bold text-foreground dark:text-zinc-100 mb-2">404</h1>
-        <p className="text-xl text-muted-fg dark:text-zinc-400 mb-2">¡Ups! Esta página despegó sin ti</p>
-        <p className="text-muted-fg dark:text-zinc-500 mb-8">
-          Parece que la página que buscas no existe o se fue al espacio exterior.
+    <div className="relative flex min-h-[70vh] items-center justify-center overflow-hidden px-4">
+      <div className="absolute inset-0 surface-grid opacity-15" />
+      <div className="relative max-w-md text-center">
+        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-lg bg-accent text-primary">
+          <SearchX className="h-10 w-10" strokeWidth={1.7} />
+        </div>
+        <h1 className="mb-2 text-6xl font-black text-foreground">404</h1>
+        <p className="mb-2 text-xl font-bold text-foreground">Esta página no está disponible</p>
+        <p className="mb-8 text-muted-fg">
+          El enlace puede haber cambiado o el recurso ya no existe.
         </p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        <div className="flex flex-col justify-center gap-3 sm:flex-row">
           <Link
             href="/"
-            className="btn-3d inline-flex items-center justify-center gap-2 px-6 py-3 bg-foreground text-background dark:bg-white dark:text-zinc-900 rounded-xl font-medium hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-foreground px-6 py-3 text-sm font-bold text-background transition-transform hover:scale-[1.02]"
           >
-            <span>←</span> Volver al Inicio
+            <ArrowLeft className="h-4 w-4" strokeWidth={1.8} />
+            Volver al inicio
           </Link>
           <Link
             href="/marketplace"
-            className="btn-3d inline-flex items-center justify-center gap-2 px-6 py-3 border border-zinc-300 dark:border-zinc-600 rounded-xl font-medium text-foreground dark:text-zinc-300 hover:bg-muted/50 dark:hover:bg-zinc-800 transition-all"
+            className="inline-flex items-center justify-center rounded-lg border border-card-border bg-card-bg/80 px-6 py-3 text-sm font-bold text-foreground backdrop-blur transition-colors hover:bg-accent"
           >
-            Explorar Servicios →
+            Explorar servicios
           </Link>
         </div>
       </div>

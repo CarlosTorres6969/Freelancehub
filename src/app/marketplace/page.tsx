@@ -1,14 +1,16 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { useEffect, useMemo, useState } from "react"
+import { Search, SlidersHorizontal, Sparkles, X } from "lucide-react"
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client"
+import { demoCategories, demoServices } from "@/lib/demo-data"
 import ServiceCard from "@/components/ServiceCard"
 import AnimatedSection from "@/components/AnimatedSection"
-import type { Service, Category } from "@/types"
+import type { Category, Service } from "@/types"
 
 export default function MarketplacePage() {
-  const [services, setServices] = useState<Service[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
+  const [services, setServices] = useState<Service[]>(demoServices)
+  const [categories, setCategories] = useState<Category[]>(demoCategories)
   const [search, setSearch] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("")
   const [sortBy, setSortBy] = useState("")
@@ -16,64 +18,81 @@ export default function MarketplacePage() {
   const [priceMax, setPriceMax] = useState("")
   const [showFilters, setShowFilters] = useState(false)
   const [ratingFilter, setRatingFilter] = useState("")
-  const [loading, setLoading] = useState(true)
-
-  const supabase = createClient()
+  const [loading, setLoading] = useState(isSupabaseConfigured)
 
   useEffect(() => {
+    if (!isSupabaseConfigured) return
+
     async function load() {
-      const [servicesRes, categoriesRes] = await Promise.all([
-        supabase.from("services").select("*, category:categories(*)").eq("active", true).order("created_at", { ascending: false }),
-        supabase.from("categories").select("*").order("name"),
-      ])
-      if (servicesRes.data) setServices(servicesRes.data)
-      if (categoriesRes.data) setCategories(categoriesRes.data)
-      setLoading(false)
+      const supabase = createClient()
+
+      try {
+        const [servicesRes, categoriesRes] = await Promise.all([
+          supabase.from("services").select("*, category:categories(*)").eq("active", true).order("created_at", { ascending: false }),
+          supabase.from("categories").select("*").order("name"),
+        ])
+        if (servicesRes.data?.length) setServices(servicesRes.data)
+        if (categoriesRes.data?.length) setCategories(categoriesRes.data)
+      } finally {
+        setLoading(false)
+      }
     }
+
     load()
   }, [])
 
   const filteredServices = useMemo(() => {
-    let result = [...services]
-
-    if (search) {
+    const result = services.filter((service) => {
       const q = search.toLowerCase()
-      result = result.filter(
-        (s) =>
-          s.title.toLowerCase().includes(q) ||
-          s.description.toLowerCase().includes(q) ||
-          s.tags.some((t) => t.toLowerCase().includes(q))
-      )
-    }
+      const matchesSearch = !q ||
+        service.title.toLowerCase().includes(q) ||
+        service.description.toLowerCase().includes(q) ||
+        service.tags.some((tag) => tag.toLowerCase().includes(q))
 
-    if (selectedCategory) {
-      result = result.filter((s) => s.category?.slug === selectedCategory)
-    }
+      const matchesCategory = !selectedCategory || service.category?.slug === selectedCategory
+      const matchesMin = !priceMin || service.price >= Number(priceMin)
+      const matchesMax = !priceMax || service.price <= Number(priceMax)
+      const matchesRating = !ratingFilter || service.rating >= Number(ratingFilter)
 
-    if (priceMin) result = result.filter((s) => s.price >= parseInt(priceMin))
-    if (priceMax) result = result.filter((s) => s.price <= parseInt(priceMax))
-    if (ratingFilter) result = result.filter((s) => s.rating >= parseFloat(ratingFilter))
+      return matchesSearch && matchesCategory && matchesMin && matchesMax && matchesRating
+    })
 
     switch (sortBy) {
-      case "price-asc": result.sort((a, b) => a.price - b.price); break
-      case "price-desc": result.sort((a, b) => b.price - a.price); break
-      case "rating": result.sort((a, b) => b.rating - a.rating); break
-      case "sales": result.sort((a, b) => b.sales - a.sales); break
+      case "price-asc":
+        return [...result].sort((a, b) => a.price - b.price)
+      case "price-desc":
+        return [...result].sort((a, b) => b.price - a.price)
+      case "rating":
+        return [...result].sort((a, b) => b.rating - a.rating)
+      case "sales":
+        return [...result].sort((a, b) => b.sales - a.sales)
+      default:
+        return result
     }
-
-    return result
   }, [services, search, selectedCategory, sortBy, priceMin, priceMax, ratingFilter])
+
+  function clearFilters() {
+    setSearch("")
+    setSelectedCategory("")
+    setPriceMin("")
+    setPriceMax("")
+    setRatingFilter("")
+    setSortBy("")
+  }
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        <div className="animate-pulse space-y-6">
-          <div className="h-10 w-64 bg-muted rounded-xl" />
-          <div className="h-12 w-full bg-muted rounded-xl" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-64 bg-muted rounded-2xl" />
-            ))}
+      <div className="relative min-h-screen overflow-hidden bg-background">
+        <div className="absolute inset-0 surface-grid opacity-20" />
+        <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+          <div className="animate-pulse space-y-6">
+            <div className="h-12 w-72 rounded-lg bg-muted" />
+            <div className="h-14 w-full rounded-lg bg-muted" />
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="h-64 rounded-lg bg-muted" />
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -81,119 +100,139 @@ export default function MarketplacePage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-      <AnimatedSection>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2">
-          <div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-foreground">Marketplace</h1>
-            <p className="mt-1 text-muted-fg">
-              {filteredServices.length} servicios encontrados
-            </p>
+    <div className="relative min-h-screen overflow-hidden bg-background">
+      <div className="absolute inset-0 surface-grid opacity-20 [mask-image:linear-gradient(to_bottom,black,transparent_68%)]" />
+      <div className="absolute inset-x-0 top-0 tech-line opacity-70" />
+
+      <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+        <AnimatedSection>
+          <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="mb-3 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.24em] text-primary">
+                <Sparkles className="h-4 w-4" strokeWidth={1.8} />
+                Marketplace
+              </p>
+              <h1 className="text-4xl font-black tracking-normal text-foreground sm:text-6xl">Talento listo para activar.</h1>
+              <p className="mt-3 text-muted-fg">
+                {filteredServices.length} servicios encontrados
+              </p>
+            </div>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-card-border bg-card-bg/80 px-4 py-3 text-sm font-bold text-muted-fg backdrop-blur transition-colors hover:text-foreground"
+            >
+              <SlidersHorizontal className={`h-4 w-4 transition-transform ${showFilters ? "rotate-90" : ""}`} strokeWidth={1.8} />
+              {showFilters ? "Ocultar filtros" : "Más filtros"}
+            </button>
           </div>
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="mt-2 sm:mt-0 inline-flex items-center gap-2 text-sm text-muted-fg hover:text-foreground border border-card-border px-3 py-2 rounded-xl hover:bg-accent transition-all"
-          >
-            <svg className={`w-4 h-4 transition-transform duration-300 ${showFilters ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-            </svg>
-            {showFilters ? "Ocultar filtros" : "Más filtros"}
-          </button>
-        </div>
-      </AnimatedSection>
+        </AnimatedSection>
 
-      <AnimatedSection delay={100}>
-        <div className="flex flex-col sm:flex-row gap-4 mb-4 mt-4">
-          <div className="relative flex-1">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-fg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <input
-              type="text"
-              placeholder="Buscar servicios..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-card-border bg-background text-foreground focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 focus:outline-none text-sm transition-all placeholder:text-muted-fg"
-            />
-          </div>
+        <AnimatedSection delay={100}>
+          <div className="mb-4 grid gap-3 lg:grid-cols-[1fr_220px_220px]">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-fg" strokeWidth={1.8} />
+              <input
+                type="text"
+                placeholder="Buscar servicios..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full rounded-lg border border-card-border bg-card-bg/80 py-3 pl-10 pr-4 text-sm text-foreground outline-none backdrop-blur transition-all placeholder:text-muted-fg focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
 
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-4 py-2.5 rounded-xl border border-card-border bg-background text-foreground focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 focus:outline-none text-sm transition-all"
-          >
-            <option value="">Todas las categorías</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.slug}>{cat.icon} {cat.name}</option>
-            ))}
-          </select>
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="rounded-lg border border-card-border bg-card-bg/80 px-4 py-3 text-sm text-foreground outline-none backdrop-blur transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+            >
+              <option value="">Todas las categorías</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.slug}>{cat.name}</option>
+              ))}
+            </select>
 
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="px-4 py-2.5 rounded-xl border border-card-border bg-background text-foreground focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 focus:outline-none text-sm transition-all"
-          >
-            <option value="">Ordenar por</option>
-            <option value="price-asc">Precio: menor a mayor</option>
-            <option value="price-desc">Precio: mayor a menor</option>
-            <option value="rating">Mejor calificados</option>
-            <option value="sales">Más vendidos</option>
-          </select>
-        </div>
-      </AnimatedSection>
-
-      <div className={`overflow-hidden transition-all duration-300 ${showFilters ? "max-h-40 opacity-100" : "max-h-0 opacity-0"}`}>
-        <div className="flex flex-wrap gap-3 mb-6 p-4 rounded-2xl bg-muted border border-card-border">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-fg">Precio:</span>
-            <input type="number" placeholder="Mín" value={priceMin} onChange={(e) => setPriceMin(e.target.value)}
-              className="w-20 px-3 py-2 rounded-lg border border-card-border bg-background text-foreground focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 focus:outline-none text-sm transition-all placeholder:text-muted-fg" />
-            <span className="text-muted-fg">—</span>
-            <input type="number" placeholder="Máx" value={priceMax} onChange={(e) => setPriceMax(e.target.value)}
-              className="w-20 px-3 py-2 rounded-lg border border-card-border bg-background text-foreground focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 focus:outline-none text-sm transition-all placeholder:text-muted-fg" />
-          </div>
-
-          <div className="w-px h-8 bg-card-border hidden sm:block self-center" />
-
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-fg">Calificación:</span>
-            <select value={ratingFilter} onChange={(e) => setRatingFilter(e.target.value)}
-              className="px-3 py-2 rounded-lg border border-card-border bg-background text-foreground focus:border-indigo-400 focus:outline-none text-sm transition-all">
-              <option value="">Cualquiera</option>
-              <option value="4.5">4.5+ estrellas</option>
-              <option value="4">4+ estrellas</option>
-              <option value="3.5">3.5+ estrellas</option>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="rounded-lg border border-card-border bg-card-bg/80 px-4 py-3 text-sm text-foreground outline-none backdrop-blur transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+            >
+              <option value="">Ordenar por</option>
+              <option value="price-asc">Precio: menor a mayor</option>
+              <option value="price-desc">Precio: mayor a menor</option>
+              <option value="rating">Mejor calificados</option>
+              <option value="sales">Más vendidos</option>
             </select>
           </div>
+        </AnimatedSection>
 
-          {(priceMin || priceMax || ratingFilter) && (
-            <button onClick={() => { setPriceMin(""); setPriceMax(""); setRatingFilter("") }}
-              className="text-sm text-muted-fg hover:text-indigo-600 underline transition-colors">
-              Limpiar filtros
+        <div className={`overflow-hidden transition-all duration-300 ${showFilters ? "mb-8 max-h-72 opacity-100" : "max-h-0 opacity-0"}`}>
+          <div className="flex flex-wrap gap-3 rounded-lg border border-card-border bg-card-bg/80 p-4 backdrop-blur-xl">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-semibold text-muted-fg">Precio</span>
+              <input
+                type="number"
+                placeholder="Mín"
+                value={priceMin}
+                onChange={(e) => setPriceMin(e.target.value)}
+                className="w-24 rounded-lg border border-card-border bg-background px-3 py-2 text-sm text-foreground outline-none transition-all placeholder:text-muted-fg focus:border-primary"
+              />
+              <span className="text-muted-fg">a</span>
+              <input
+                type="number"
+                placeholder="Máx"
+                value={priceMax}
+                onChange={(e) => setPriceMax(e.target.value)}
+                className="w-24 rounded-lg border border-card-border bg-background px-3 py-2 text-sm text-foreground outline-none transition-all placeholder:text-muted-fg focus:border-primary"
+              />
+            </div>
+
+            <div className="hidden h-8 w-px self-center bg-card-border sm:block" />
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-muted-fg">Calificación</span>
+              <select
+                value={ratingFilter}
+                onChange={(e) => setRatingFilter(e.target.value)}
+                className="rounded-lg border border-card-border bg-background px-3 py-2 text-sm text-foreground outline-none transition-all focus:border-primary"
+              >
+                <option value="">Cualquiera</option>
+                <option value="4.5">4.5+ estrellas</option>
+                <option value="4">4+ estrellas</option>
+                <option value="3.5">3.5+ estrellas</option>
+              </select>
+            </div>
+
+            {(search || selectedCategory || priceMin || priceMax || ratingFilter || sortBy) && (
+              <button
+                onClick={clearFilters}
+                className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold text-muted-fg transition-colors hover:bg-accent hover:text-foreground"
+              >
+                <X className="h-4 w-4" strokeWidth={1.8} />
+                Limpiar filtros
+              </button>
+            )}
+          </div>
+        </div>
+
+        {filteredServices.length === 0 ? (
+          <div className="rounded-lg border border-card-border bg-card-bg/80 px-6 py-20 text-center backdrop-blur-xl animate-fade-in">
+            <Search className="mx-auto mb-4 h-10 w-10 text-muted-fg" strokeWidth={1.7} />
+            <h3 className="mb-2 text-lg font-bold text-foreground">No se encontraron servicios</h3>
+            <p className="text-muted-fg">Intenta con otros términos de búsqueda o filtros.</p>
+            <button onClick={clearFilters} className="mt-4 text-sm font-bold text-primary hover:text-secondary">
+              Limpiar todos los filtros
             </button>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredServices.map((service, i) => (
+              <AnimatedSection key={service.id} delay={i * 60}>
+                <ServiceCard service={service} />
+              </AnimatedSection>
+            ))}
+          </div>
+        )}
       </div>
-
-      {filteredServices.length === 0 ? (
-        <div className="text-center py-20 animate-fade-in">
-          <div className="text-4xl mb-4 animate-bounce-in">🔍</div>
-          <h3 className="text-lg font-semibold text-foreground mb-2">No se encontraron servicios</h3>
-          <p className="text-muted-fg">Intenta con otros términos de búsqueda o filtros.</p>
-          <button onClick={() => { setSearch(""); setSelectedCategory(""); setPriceMin(""); setPriceMax(""); setRatingFilter("") }}
-            className="mt-4 text-sm text-indigo-500 hover:text-indigo-600 underline transition-colors">
-            Limpiar todos los filtros
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredServices.map((service, i) => (
-            <AnimatedSection key={service.id} delay={i * 60}>
-              <ServiceCard service={service} />
-            </AnimatedSection>
-          ))}
-        </div>
-      )}
     </div>
   )
 }

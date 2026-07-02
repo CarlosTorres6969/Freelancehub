@@ -2,123 +2,157 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { createClient } from "@/lib/supabase/client"
-import FloatingParticles3D from "./HeroParticles"
+import { ArrowRight, BarChart3, CheckCircle2, RadioTower, Search, ShieldCheck, Sparkles, Zap } from "lucide-react"
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client"
+
+const fallbackStats = {
+  projects: "500+",
+  freelancers: "200+",
+  rating: "4.8",
+  satisfaction: "98%",
+}
 
 export default function Hero() {
-  const [stats, setStats] = useState({ projects: "—", freelancers: "—", rating: "—", satisfaction: "98%" })
-  const supabase = createClient()
+  const [stats, setStats] = useState(fallbackStats)
 
   useEffect(() => {
+    if (!isSupabaseConfigured) return
+
     async function loadStats() {
-      const [{ count: projects }, { count: freelancers }, { data: ratingData }] = await Promise.all([
-        supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "completed"),
-        supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "freelancer"),
-        supabase.from("services").select("rating"),
-      ])
-      const avgRating = ratingData && ratingData.length > 0
-        ? (ratingData.reduce((sum, s) => sum + s.rating, 0) / ratingData.length).toFixed(1)
-        : "4.8"
-      setStats({
-        projects: `${projects ?? 0}+`,
-        freelancers: `${freelancers ?? 0}+`,
-        rating: avgRating,
-        satisfaction: "98%",
-      })
+      const supabase = createClient()
+
+      try {
+        const [{ count: projects }, { count: freelancers }, { data: ratingData }] = await Promise.all([
+          supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "completed"),
+          supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "freelancer"),
+          supabase.from("services").select("rating"),
+        ])
+        const avgRating = ratingData && ratingData.length > 0
+          ? (ratingData.reduce((sum, s) => sum + Number(s.rating ?? 0), 0) / ratingData.length).toFixed(1)
+          : fallbackStats.rating
+
+        setStats({
+          projects: `${projects ?? 0}+`,
+          freelancers: `${freelancers ?? 0}+`,
+          rating: avgRating,
+          satisfaction: fallbackStats.satisfaction,
+        })
+      } catch {
+        setStats(fallbackStats)
+      }
     }
+
     loadStats()
   }, [])
 
+  const statItems = [
+    { value: stats.projects, label: "Proyectos completados" },
+    { value: stats.freelancers, label: "Freelancers activos" },
+    { value: stats.rating, label: "Calificación promedio" },
+    { value: stats.satisfaction, label: "Clientes satisfechos" },
+  ]
+
   return (
-    <section className="relative overflow-hidden bg-foreground text-background" style={{ perspective: "1200px" }}>
-      <div
-        className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-indigo-950/30 to-zinc-900"
-        style={{ backgroundSize: "200% 200%", animation: "gradient-shift 8s ease infinite" }}
-      />
-      <div
-        className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-500/20 via-transparent to-transparent"
-      />
-      <div
-        className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-purple-500/15 via-transparent to-transparent"
-      />
+    <section className="relative isolate overflow-hidden bg-[#080913] text-white">
+      <video
+        className="absolute inset-0 h-full w-full object-cover"
+        autoPlay
+        muted
+        loop
+        playsInline
+        poster="/media/purple-desert.jpg"
+        aria-hidden="true"
+      >
+        <source src="/media/purple-desert.mp4" type="video/mp4" />
+      </video>
 
-      <FloatingParticles3D />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(7,9,19,0.92)_0%,rgba(7,9,19,0.68)_42%,rgba(7,9,19,0.32)_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,9,19,0.08)_0%,rgba(7,9,19,0.42)_72%,rgba(7,9,19,0.94)_100%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_24%,rgba(124,58,237,0.18),transparent_34%),radial-gradient(circle_at_24%_72%,rgba(34,211,238,0.08),transparent_30%)]" />
+      <div className="scan-line opacity-60" />
+      <div className="absolute bottom-10 left-1/2 h-px w-[120vw] -translate-x-1/2 horizon-panel opacity-70" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32 relative">
-        <div className="max-w-3xl">
-          <div
-            className="inline-flex items-center gap-2 glass-dark rounded-full px-4 py-1.5 text-sm text-white/70 mb-6 animate-fade-in"
-            style={{ animationDuration: "0.8s" }}
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
-            </span>
-            Talento Centroamericano en un solo lugar
+      <div className="relative mx-auto flex min-h-[calc(100svh-7rem)] max-w-7xl flex-col justify-center px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+        <div className="max-w-4xl">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white/80 backdrop-blur-xl animate-fade-in">
+            <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-300 shadow-[0_0_18px_rgba(52,211,153,0.9)]" />
+            Talento verificado para equipos que se mueven rápido
           </div>
 
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-tight animate-fade-in-up" style={{ animationDuration: "1s" }}>
-            Encuentra el talento
-            <span className="block text-gradient mt-2">
-              que tu proyecto necesita
+          <h1 className="max-w-4xl text-5xl font-black leading-[0.94] tracking-normal text-white sm:text-6xl lg:text-8xl animate-fade-in-up">
+            FreelanceHub
+            <span className="mt-3 block text-gradient">
+              talento freelance en modo futuro.
             </span>
           </h1>
 
           <p
-            className="mt-6 text-lg sm:text-xl text-white/70 max-w-2xl leading-relaxed animate-fade-in-up"
-            style={{ animationDuration: "1s", animationDelay: "0.2s", opacity: 0, animationFillMode: "forwards" }}
+            className="mt-6 max-w-2xl text-base leading-8 text-white/75 sm:text-xl animate-fade-in-up"
+            style={{ animationDelay: "0.15s", animationFillMode: "both" }}
           >
-            Conectamos a las mejores freelancers de Centroamérica con proyectos innovadores.
-            Desde desarrollo web hasta marketing digital, encuentra el profesional ideal para tu próximo proyecto.
+            Conecta proyectos ambiciosos con freelancers de Centroamérica en una experiencia rápida,
+            visual y segura, diseñada para descubrir, contratar y avanzar sin fricción.
           </p>
 
           <div
-            className="mt-8 flex flex-col sm:flex-row gap-4 animate-fade-in-up"
-            style={{ animationDuration: "1s", animationDelay: "0.4s", opacity: 0, animationFillMode: "forwards" }}
+            className="mt-8 flex flex-col gap-3 sm:flex-row animate-fade-in-up"
+            style={{ animationDelay: "0.28s", animationFillMode: "both" }}
           >
             <Link
               href="/marketplace"
-              className="group relative inline-flex items-center justify-center gap-2 bg-white text-foreground font-semibold px-8 py-3 rounded-xl overflow-hidden transition-all duration-150 hover:scale-105"
+              className="group inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-bold text-[#11131c] shadow-2xl shadow-violet-950/30 transition-transform hover:scale-[1.02]"
             >
-              <span className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
-              <span className="relative z-10 group-hover:text-white transition-colors duration-150 flex items-center gap-2">
-                Explorar Servicios
-                <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-150" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </span>
+              <Search className="h-4 w-4" strokeWidth={2} />
+              Explorar servicios
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" strokeWidth={2} />
             </Link>
             <Link
               href="/dashboard"
-              className="group inline-flex items-center justify-center gap-2 border border-white/20 text-white/70 font-semibold px-8 py-3 rounded-xl hover:bg-white/10 hover:border-white/30 transition-all duration-150"
+              className="group inline-flex items-center justify-center gap-2 rounded-lg border border-white/25 bg-white/10 px-6 py-3 text-sm font-bold text-white backdrop-blur-xl transition-colors hover:bg-white/15"
             >
-              <svg className="w-5 h-5 group-hover:rotate-12 transition-transform duration-150" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              Ver Dashboard
+              <BarChart3 className="h-4 w-4" strokeWidth={2} />
+              Ver dashboard
             </Link>
+          </div>
+
+          <div
+            className="mt-10 grid max-w-3xl grid-cols-1 gap-3 text-sm text-white/80 sm:grid-cols-3 animate-fade-in-up"
+            style={{ animationDelay: "0.42s", animationFillMode: "both" }}
+          >
+            {[
+              { icon: ShieldCheck, label: "Pagos protegidos" },
+              { icon: RadioTower, label: "Mensajes en tiempo real" },
+              { icon: Zap, label: "Match de talento ágil" },
+            ].map((item) => {
+              const Icon = item.icon
+              return (
+                <div key={item.label} className="flex items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-3 py-2 backdrop-blur">
+                  <Icon className="h-4 w-4 text-cyan-200" strokeWidth={1.8} />
+                  {item.label}
+                </div>
+              )
+            })}
           </div>
         </div>
 
         <div
-          className="mt-16 grid grid-cols-2 sm:grid-cols-4 gap-6 border-t border-white/20 pt-12 animate-fade-in-up"
-          style={{ animationDuration: "1s", animationDelay: "0.6s", opacity: 0, animationFillMode: "forwards" }}
+          className="mt-12 grid gap-3 border-t border-white/15 pt-6 sm:grid-cols-2 lg:grid-cols-4 animate-fade-in-up"
+          style={{ animationDelay: "0.56s", animationFillMode: "both" }}
         >
-          {[
-            { value: stats.projects, label: "Proyectos Completados" },
-            { value: stats.freelancers, label: "Freelancers Activos" },
-            { value: stats.rating, label: "Calificación Promedio" },
-            { value: stats.satisfaction, label: "Clientes Satisfechos" },
-          ].map((stat, i) => (
-            <div key={i} className="text-center group">
-              <div className="text-3xl sm:text-4xl font-bold text-white group-hover:text-gradient transition-all duration-300">
-                {stat.value}
+          {statItems.map((stat) => (
+            <div key={stat.label} className="group rounded-lg border border-white/15 bg-white/10 p-4 backdrop-blur-xl transition-colors hover:bg-white/15">
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-3xl font-black tracking-normal text-white sm:text-4xl">{stat.value}</div>
+                <CheckCircle2 className="h-5 w-5 text-emerald-300 opacity-80 transition-transform group-hover:scale-110" strokeWidth={1.8} />
               </div>
-              <div className="text-sm text-white/50 mt-1 group-hover:text-white/70 transition-colors duration-300">
-                {stat.label}
-              </div>
+              <div className="mt-1 text-sm font-medium text-white/60">{stat.label}</div>
             </div>
           ))}
+        </div>
+
+        <div className="mt-5 flex items-center gap-3 text-xs uppercase tracking-[0.22em] text-white/45">
+          <Sparkles className="h-4 w-4 text-cyan-200" strokeWidth={1.8} />
+          Red regional activa
         </div>
       </div>
     </section>
