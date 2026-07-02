@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { Star } from "lucide-react"
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client"
 import { useAuth } from "@/contexts/AuthContext"
 import { useToast } from "@/contexts/ToastContext"
 
@@ -12,7 +13,6 @@ export default function ReviewForm({ serviceId, onSubmitted }: { serviceId: stri
   const [hover, setHover] = useState(0)
   const [comment, setComment] = useState("")
   const [submitting, setSubmitting] = useState(false)
-  const supabase = createClient()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -32,10 +32,16 @@ export default function ReviewForm({ serviceId, onSubmitted }: { serviceId: stri
       return
     }
 
+    if (!isSupabaseConfigured) {
+      addToast("Modo demo: conecta Supabase para guardar reseñas", "info")
+      return
+    }
+
     setSubmitting(true)
 
+    const supabase = createClient()
     const userName = profile?.name ?? user.email?.split("@")[0] ?? "Usuario"
-    const userAvatar = userName.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
+    const userAvatar = userName.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
 
     const { error } = await supabase.from("reviews").insert({
       service_id: serviceId,
@@ -73,10 +79,10 @@ export default function ReviewForm({ serviceId, onSubmitted }: { serviceId: stri
   }
 
   return (
-    <form onSubmit={handleSubmit} className="p-6 rounded-2xl border border-card-border bg-card-bg">
-      <h3 className="font-semibold text-foreground mb-4">Deja tu reseña</h3>
+    <form onSubmit={handleSubmit} className="rounded-lg border border-card-border bg-card-bg/80 p-6 backdrop-blur-xl">
+      <h3 className="mb-4 font-bold text-foreground">Deja tu reseña</h3>
 
-      <div className="flex items-center gap-1 mb-4">
+      <div className="mb-4 flex items-center gap-1">
         {[1, 2, 3, 4, 5].map((star) => (
           <button
             key={star}
@@ -85,17 +91,15 @@ export default function ReviewForm({ serviceId, onSubmitted }: { serviceId: stri
             onMouseEnter={() => setHover(star)}
             onMouseLeave={() => setHover(0)}
             className="p-0.5 transition-transform hover:scale-110"
+            aria-label={`${star} de 5`}
           >
-            <svg
-              className={`w-6 h-6 ${star <= (hover || rating) ? "text-amber-400" : "text-zinc-300 dark:text-zinc-600"} transition-colors`}
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
+            <Star
+              className={`h-6 w-6 ${star <= (hover || rating) ? "fill-warning text-warning" : "text-muted-fg/35"} transition-colors`}
+              strokeWidth={1.5}
+            />
           </button>
         ))}
-        <span className="text-sm text-muted-fg ml-2">
+        <span className="ml-2 text-sm text-muted-fg">
           {rating > 0 ? `${rating} de 5` : "Califica"}
         </span>
       </div>
@@ -106,14 +110,14 @@ export default function ReviewForm({ serviceId, onSubmitted }: { serviceId: stri
           rows={3}
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          className="w-full px-4 py-2.5 rounded-lg border border-card-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+          className="w-full resize-none rounded-lg border border-card-border bg-background px-4 py-2.5 text-sm text-foreground outline-none transition-all placeholder:text-muted-fg focus:border-primary focus:ring-2 focus:ring-primary/20"
         />
         <button
           type="submit"
           disabled={submitting}
-          className="btn-3d px-5 py-2.5 bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 rounded-xl text-sm font-medium hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all disabled:opacity-50"
+          className="rounded-lg bg-foreground px-5 py-2.5 text-sm font-bold text-background transition-transform hover:scale-[1.01] disabled:opacity-50"
         >
-          {submitting ? "Enviando..." : "Enviar Reseña"}
+          {submitting ? "Enviando..." : "Enviar reseña"}
         </button>
       </div>
     </form>

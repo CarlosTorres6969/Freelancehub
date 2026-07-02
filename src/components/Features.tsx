@@ -1,89 +1,91 @@
 "use client"
 
+import { LayoutDashboard, MessagesSquare, Search, ShieldCheck } from "lucide-react"
 import AnimatedSection from "./AnimatedSection"
 import TiltCard from "./TiltCard"
 
 const features = [
   {
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-      </svg>
-    ),
-    title: "Búsqueda Inteligente",
-    description: "Encuentra el talento perfecto con filtros por categoría, precio, calificación y más.",
-    gradient: "from-indigo-500 to-purple-500",
-    glow: "glow-indigo",
+    icon: Search,
+    title: "Descubrimiento inteligente",
+    description: "Filtros por categoría, precio, calificación y tiempo de entrega para llegar al talento correcto en menos pasos.",
+    accent: "from-cyan-400 to-blue-500",
+    metric: "4x",
+    metricLabel: "más rápido",
   },
   {
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-      </svg>
-    ),
-    title: "Pagos Seguros",
-    description: "Sistema de pagos protegido. Solo liberamos el pago cuando estés satisfecho con el trabajo.",
-    gradient: "from-emerald-500 to-teal-500",
-    glow: "glow-emerald",
+    icon: ShieldCheck,
+    title: "Contratación protegida",
+    description: "Flujos de pago y entrega pensados para que cliente y freelancer trabajen con confianza desde el primer día.",
+    accent: "from-emerald-400 to-teal-500",
+    metric: "98%",
+    metricLabel: "satisfacción",
   },
   {
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-      </svg>
-    ),
-    title: "Chat en Tiempo Real",
-    description: "Comunicación directa con los freelancers. Resuelve dudas al instante antes de contratar.",
-    gradient: "from-blue-500 to-cyan-500",
-    glow: "glow-pink",
+    icon: MessagesSquare,
+    title: "Colaboración directa",
+    description: "Mensajes, contexto y seguimiento en un solo espacio para evitar pérdidas de información entre plataformas.",
+    accent: "from-fuchsia-400 to-rose-500",
+    metric: "24/7",
+    metricLabel: "señal activa",
   },
   {
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-      </svg>
-    ),
-    title: "Dashboard de Control",
-    description: "Gestiona tus proyectos, órdenes activas y estadísticas desde un solo panel.",
-    gradient: "from-amber-500 to-orange-500",
-    glow: "glow-indigo",
+    icon: LayoutDashboard,
+    title: "Operación centralizada",
+    description: "Dashboard para revisar órdenes, conversaciones, favoritos y progreso sin perder el pulso del proyecto.",
+    accent: "from-amber-300 to-orange-500",
+    metric: "1",
+    metricLabel: "panel único",
   },
 ]
 
 export default function Features() {
   return (
-    <section className="py-20 sm:py-28 bg-background relative overflow-hidden" style={{ perspective: "1000px" }}>
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-indigo-50 via-transparent to-transparent opacity-50" />
+    <section className="relative overflow-hidden bg-background py-20 sm:py-28">
+      <div className="absolute inset-0 surface-grid opacity-45 [mask-image:linear-gradient(to_bottom,black,transparent_72%)]" />
+      <div className="absolute inset-x-0 top-0 tech-line opacity-70" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <AnimatedSection>
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
-              Todo lo que necesitas para trabajar
+          <div className="mx-auto mb-14 max-w-3xl text-center">
+            <p className="mb-3 text-xs font-bold uppercase tracking-[0.24em] text-primary">Sistema de trabajo</p>
+            <h2 className="text-3xl font-black tracking-normal text-foreground sm:text-5xl">
+              Una experiencia diseñada para cerrar la brecha entre idea y entrega.
             </h2>
-            <p className="mt-4 text-lg text-muted-fg">
-              FreelanceHub ofrece las herramientas que necesitas para encontrar y gestionar el mejor talento.
+            <p className="mt-5 text-base leading-7 text-muted-fg sm:text-lg">
+              FreelanceHub combina búsqueda, confianza y gestión en una interfaz rápida para proyectos modernos.
             </p>
           </div>
         </AnimatedSection>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {features.map((feature, index) => (
-            <AnimatedSection key={index} delay={index * 100}>
-              <TiltCard tiltDegree={5} glare={true} scale={1.02}>
-                <div className="group relative p-6 rounded-2xl border border-card-border bg-card-bg hover:border-transparent transition-colors duration-300 overflow-hidden">
-                  <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
-                  <div style={{ transform: "translateZ(15px)" }}>
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-foreground group-hover:text-white transition-all duration-300 mb-4 bg-muted group-hover:bg-gradient-to-br ${feature.gradient} group-hover:shadow-lg group-hover:scale-110`}>
-                      {feature.icon}
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {features.map((feature, index) => {
+            const Icon = feature.icon
+            return (
+              <AnimatedSection key={feature.title} delay={index * 90}>
+                <TiltCard tiltDegree={4} glare scale={1.015}>
+                  <div className="group relative h-full overflow-hidden rounded-lg border border-card-border bg-card-bg/80 p-5 backdrop-blur-xl transition-colors hover:border-primary/40">
+                    <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${feature.accent}`} />
+                    <div className="mb-6 flex items-center justify-between gap-4" style={{ transform: "translateZ(16px)" }}>
+                      <div className={`flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br ${feature.accent} text-white shadow-lg shadow-black/10`}>
+                        <Icon className="h-6 w-6" strokeWidth={1.8} />
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-black text-foreground">{feature.metric}</div>
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-fg">{feature.metricLabel}</div>
+                      </div>
                     </div>
+                    <h3 className="text-lg font-bold text-foreground" style={{ transform: "translateZ(18px)" }}>
+                      {feature.title}
+                    </h3>
+                    <p className="mt-3 text-sm leading-6 text-muted-fg" style={{ transform: "translateZ(10px)" }}>
+                      {feature.description}
+                    </p>
                   </div>
-                  <h3 className="font-semibold text-foreground mb-2" style={{ transform: "translateZ(20px)" }}>{feature.title}</h3>
-                  <p className="text-sm text-muted-fg leading-relaxed group-hover:text-muted-fg transition-colors" style={{ transform: "translateZ(10px)" }}>{feature.description}</p>
-                </div>
-              </TiltCard>
-            </AnimatedSection>
-          ))}
+                </TiltCard>
+              </AnimatedSection>
+            )
+          })}
         </div>
       </div>
     </section>

@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useEffect, useRef, useState } from "react"
+import { Bell, Info, MessageSquare, Package, Star } from "lucide-react"
 import { useNotifications } from "@/contexts/NotificationContext"
-import Link from "next/link"
 
 function formatTime(ts: string) {
   const seconds = Math.floor((Date.now() - new Date(ts).getTime()) / 1000)
@@ -10,6 +10,13 @@ function formatTime(ts: string) {
   if (seconds < 3600) return `Hace ${Math.floor(seconds / 60)} min`
   if (seconds < 86400) return `Hace ${Math.floor(seconds / 3600)} h`
   return `Hace ${Math.floor(seconds / 86400)} d`
+}
+
+const iconMap = {
+  order: Package,
+  message: MessageSquare,
+  review: Star,
+  system: Info,
 }
 
 export default function NotificationBell() {
@@ -25,55 +32,58 @@ export default function NotificationBell() {
     return () => document.removeEventListener("mousedown", handleClick)
   }, [])
 
-  const typeIcons: Record<string, string> = {
-    order: "📦",
-    message: "💬",
-    review: "⭐",
-    system: "🔔",
-  }
-
   return (
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="relative p-2 rounded-lg text-muted-fg hover:text-foreground hover:bg-accent transition-colors"
+        className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-card-border bg-card-bg/80 text-muted-fg backdrop-blur transition-colors hover:text-foreground"
         aria-label="Notificaciones"
+        title="Notificaciones"
       >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-        </svg>
+        <Bell className="h-5 w-5" strokeWidth={1.8} />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full">
+          <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-white">
             {unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 bg-card-bg border border-card-border rounded-xl shadow-xl z-50 animate-fade-in">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-card-border">
-            <span className="font-semibold text-sm text-foreground">Notificaciones</span>
+        <div className="absolute right-0 z-50 mt-3 w-80 overflow-hidden rounded-2xl border border-card-border bg-card-bg shadow-2xl shadow-black/10 backdrop-blur-xl animate-fade-in">
+          <div className="flex items-center justify-between gap-3 border-b border-card-border px-4 py-3">
+            <span className="text-sm font-bold text-foreground">Notificaciones</span>
             {unreadCount > 0 && (
-              <button onClick={markAllAsRead} className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300">
-                Marcar todas leídas
+              <button onClick={markAllAsRead} className="text-xs font-semibold text-primary hover:text-secondary">
+                Marcar leídas
               </button>
             )}
           </div>
           <div className="max-h-80 overflow-y-auto">
-            {notifications.map((n) => (
-              <button
-                key={n.id}
-                onClick={() => markAsRead(n.id)}
-                className={`w-full text-left px-4 py-3 flex items-start gap-3 hover:bg-accent transition-colors ${!n.read ? "bg-indigo-50 dark:bg-indigo-950/30" : ""}`}
-              >
-                <span className="text-lg shrink-0">{typeIcons[n.type] || "🔔"}</span>
-                <div className="min-w-0">
-                  <p className={`text-sm text-foreground ${!n.read ? "font-semibold" : ""}`}>{n.title}</p>
-                  <p className="text-xs text-muted-fg truncate">{n.message}</p>
-                  <p className="text-[11px] text-muted-fg mt-0.5">{formatTime(n.created_at)}</p>
-                </div>
-              </button>
-            ))}
+            {notifications.length === 0 ? (
+              <div className="px-4 py-8 text-center text-sm text-muted-fg">
+                No hay notificaciones nuevas.
+              </div>
+            ) : (
+              notifications.map((n) => {
+                const Icon = iconMap[n.type] ?? Info
+                return (
+                  <button
+                    key={n.id}
+                    onClick={() => markAsRead(n.id)}
+                    className={`flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-accent ${!n.read ? "bg-primary/10" : ""}`}
+                  >
+                    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
+                      <Icon className="h-4 w-4" strokeWidth={1.8} />
+                    </span>
+                    <span className="min-w-0">
+                      <span className={`block text-sm text-foreground ${!n.read ? "font-bold" : "font-medium"}`}>{n.title}</span>
+                      <span className="block truncate text-xs text-muted-fg">{n.message}</span>
+                      <span className="mt-1 block text-[11px] text-muted-fg">{formatTime(n.created_at)}</span>
+                    </span>
+                  </button>
+                )
+              })
+            )}
           </div>
         </div>
       )}

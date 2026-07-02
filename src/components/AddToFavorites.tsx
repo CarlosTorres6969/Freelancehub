@@ -1,5 +1,6 @@
 "use client"
 
+import { Heart } from "lucide-react"
 import { useFavorites } from "@/contexts/FavoritesContext"
 import { useAuth } from "@/contexts/AuthContext"
 
@@ -13,25 +14,13 @@ export default function AddToFavorites({ serviceId }: { serviceId: string }) {
   return (
     <button
       onClick={() => toggleFavorite(serviceId)}
-      className={`flex items-center justify-center gap-2 w-full border py-3 rounded-xl transition-all mb-3 text-sm ${
+      className={`mb-3 flex w-full items-center justify-center gap-2 rounded-lg border py-3 text-sm font-bold transition-all ${
         fav
-          ? "border-red-200 bg-red-50 text-red-600 dark:border-red-800 dark:bg-red-950/30 dark:text-red-400"
-          : "border-card-border text-muted-fg hover:bg-accent"
+          ? "border-danger bg-danger text-white shadow-lg shadow-danger/20"
+          : "border-card-border text-muted-fg hover:bg-accent hover:text-foreground"
       }`}
     >
-      <svg
-        className="w-5 h-5"
-        fill={fav ? "currentColor" : "none"}
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-        />
-      </svg>
+      <Heart className={`h-5 w-5 ${fav ? "fill-current" : ""}`} strokeWidth={1.8} />
       {fav ? "Quitar de favoritos" : "Guardar en favoritos"}
     </button>
   )

@@ -1,5 +1,4 @@
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 import Navbar from "@/components/Navbar"
 import Footer from "@/components/Footer"
@@ -7,20 +6,10 @@ import Chatbot from "@/components/Chatbot"
 import { Providers } from "./providers"
 import { AuthProvider } from "@/contexts/AuthContext"
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-})
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-})
-
 export const metadata: Metadata = {
-  title: "FreelanceHub - Conectando Talento Centroamericano",
+  title: "FreelanceHub - Talent OS para proyectos digitales",
   description:
-    "La plataforma líder para conectar talento freelance con proyectos innovadores en Centroamérica.",
+    "La plataforma para conectar talento freelance de Centroamérica con proyectos digitales modernos.",
 }
 
 export default function RootLayout({
@@ -29,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="es" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="es" suppressHydrationWarning className="h-full antialiased">
       <body className="min-h-full flex flex-col bg-background text-foreground font-sans transition-colors duration-200">
         <AuthProvider>
           <Providers>

@@ -24,16 +24,16 @@ const STORAGE_KEY = "freelancehub_recently_viewed"
 const MAX_ITEMS = 6
 
 export function RecentlyViewedProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<RecentlyViewedItem[]>([])
-
-  useEffect(() => {
+  const [items, setItems] = useState<RecentlyViewedItem[]>(() => {
+    if (typeof window === "undefined") return []
     const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) {
-      try {
-        setItems(JSON.parse(stored))
-      } catch {}
+    if (!stored) return []
+    try {
+      return JSON.parse(stored) as RecentlyViewedItem[]
+    } catch {
+      return []
     }
-  }, [])
+  })
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items))

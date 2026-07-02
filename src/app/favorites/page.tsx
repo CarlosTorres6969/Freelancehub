@@ -14,11 +14,20 @@ export default function FavoritesPage() {
   const { favorites } = useFavorites()
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
 
   useEffect(() => {
-    if (!user) { setLoading(false); return }
-    if (favorites.length === 0) { setServices([]); setLoading(false); return }
+    if (!user) {
+      queueMicrotask(() => setLoading(false))
+      return
+    }
+    if (favorites.length === 0) {
+      queueMicrotask(() => {
+        setServices([])
+        setLoading(false)
+      })
+      return
+    }
+    const supabase = createClient()
 
     supabase
       .from("services")

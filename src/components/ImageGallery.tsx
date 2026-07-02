@@ -1,42 +1,49 @@
 "use client"
 
+import NextImage from "next/image"
 import { useState } from "react"
+import { Image as ImageIcon } from "lucide-react"
 
 export default function ImageGallery({ images }: { images?: string[] }) {
   const [active, setActive] = useState(0)
-  const hasImages = images && images.length > 0
+  const hasImages = Boolean(images?.length)
 
   return (
     <div>
-      <div className="relative aspect-video bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-950 dark:to-purple-950 rounded-xl overflow-hidden mb-3">
-        {hasImages ? (
-          <img
+      <div className="relative mb-3 aspect-video overflow-hidden rounded-lg border border-card-border bg-gradient-to-br from-accent via-card-bg to-muted">
+        {hasImages && images ? (
+          <NextImage
             src={images[active]}
             alt=""
-            className="w-full h-full object-cover"
+            fill
+            unoptimized
+            className="object-cover"
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-6xl">🖼️</span>
+            <ImageIcon className="h-16 w-16 text-muted-fg/45" strokeWidth={1.5} />
           </div>
         )}
-        <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
-          {hasImages ? `Imagen ${active + 1} de ${images.length}` : "Vista previa"}
+        <div className="absolute bottom-2 left-2 rounded bg-black/60 px-2 py-1 text-xs text-white">
+          {hasImages && images ? `Imagen ${active + 1} de ${images.length}` : "Vista previa"}
         </div>
       </div>
-      {hasImages && images.length > 1 && (
+      {hasImages && images && images.length > 1 && (
         <div className="flex gap-2 overflow-x-auto pb-1">
           {images.map((src, i) => (
             <button
-              key={i}
+              key={src}
               onClick={() => setActive(i)}
-              className={`shrink-0 w-16 h-12 rounded-lg border-2 transition-all ${
+              className={`h-12 w-16 shrink-0 rounded-lg border-2 transition-all ${
                 i === active
-                  ? "border-indigo-500 ring-1 ring-indigo-500"
-                  : "border-zinc-200 dark:border-zinc-700 opacity-60 hover:opacity-100"
+                  ? "border-primary ring-1 ring-primary"
+                  : "border-card-border opacity-60 hover:opacity-100"
               }`}
+              aria-label={`Ver imagen ${i + 1}`}
             >
-              <img src={src} alt="" className="w-full h-full rounded-md object-cover" />
+              <span className="relative block h-full w-full overflow-hidden rounded-md">
+                <NextImage src={src} alt="" fill unoptimized className="object-cover" />
+              </span>
             </button>
           ))}
         </div>

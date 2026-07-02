@@ -11,17 +11,14 @@ const ThemeContext = createContext<{
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>("light")
-  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
-    const stored = localStorage.getItem("theme") as Theme | null
-    if (stored) {
-      setTheme(stored)
-      document.documentElement.classList.toggle("dark", stored === "dark")
-    } else {
-      document.documentElement.classList.remove("dark")
-    }
+    queueMicrotask(() => {
+      const stored = localStorage.getItem("theme") as Theme | null
+      const next = stored ?? "light"
+      setTheme(next)
+      document.documentElement.classList.toggle("dark", next === "dark")
+    })
   }, [])
 
   const toggleTheme = () => {
@@ -30,8 +27,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("theme", next)
     document.documentElement.classList.toggle("dark", next === "dark")
   }
-
-  if (!mounted) return <>{children}</>
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>

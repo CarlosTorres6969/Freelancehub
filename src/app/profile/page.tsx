@@ -21,13 +21,15 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (profile) {
-      setName(profile.name ?? "")
-      setTitle(profile.title ?? "")
-      setDescription(profile.description ?? "")
-      setBio(profile.bio ?? "")
-      setLocation(profile.location ?? "")
-      setSkills(profile.skills?.join(", ") ?? "")
-      setLanguages(profile.languages?.join(", ") ?? "")
+      queueMicrotask(() => {
+        setName(profile.name ?? "")
+        setTitle(profile.title ?? "")
+        setDescription(profile.description ?? "")
+        setBio(profile.bio ?? "")
+        setLocation(profile.location ?? "")
+        setSkills(profile.skills?.join(", ") ?? "")
+        setLanguages(profile.languages?.join(", ") ?? "")
+      })
     }
   }, [profile])
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useAuth } from "@/contexts/AuthContext"
 import AnimatedSection from "@/components/AnimatedSection"
@@ -15,7 +15,7 @@ export default function MessagesPage() {
   const [input, setInput] = useState("")
   const [participants, setParticipants] = useState<Record<string, Profile>>({})
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
     if (!user) return
@@ -30,9 +30,7 @@ export default function MessagesPage() {
 
       if (data) {
         setConversations(data)
-        if (data.length > 0 && !selected) {
-          setSelected(data[0].id)
-        }
+        setSelected((current) => current ?? data[0]?.id ?? null)
 
         const allIds = data.flatMap((c) => c.participant_ids)
         const uniqueIds = [...new Set(allIds.filter((id) => id !== userId))]
@@ -51,7 +49,7 @@ export default function MessagesPage() {
     }
 
     loadConversations()
-  }, [user])
+  }, [user, supabase])
 
   useEffect(() => {
     if (!selected) return
@@ -86,7 +84,7 @@ export default function MessagesPage() {
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
-  }, [selected])
+  }, [selected, supabase])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -189,7 +187,6 @@ export default function MessagesPage() {
               <div className="flex-1 overflow-y-auto p-6 space-y-4">
                 {messages.map((msg) => {
                   const isMe = msg.sender_id === user.id
-                  const senderProfile = isMe ? null : otherProfile
                   return (
                     <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                       <div
