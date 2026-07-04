@@ -1,0 +1,184 @@
+"use client"
+
+import { useMemo, useEffect, useState } from "react"
+import { useTheme } from "@/contexts/ThemeContext"
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+} from "chart.js"
+import { Line, Bar, Doughnut } from "react-chartjs-2"
+import type { Order, Category } from "@/types"
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend, Filler)
+
+function groupByMonth(items: { created_at: string }[], monthsBack: number) {
+  const groups: Record<string, number> = {}
+  const now = new Date()
+  for (let i = monthsBack - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+    groups[key] = 0
+  }
+  for (const item of items) {
+    const d = new Date(item.created_at)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+    if (key in groups) groups[key]++
+  }
+  return Object.values(groups)
+}
+
+function groupRevenueByMonth(orders: Order[], monthsBack: number) {
+  const groups: Record<string, number> = {}
+  const now = new Date()
+  for (let i = monthsBack - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+    groups[key] = 0
+  }
+  for (const o of orders) {
+    if (o.status === "completed") {
+      const d = new Date(o.created_at)
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+      if (key in groups) groups[key] += o.total
+    }
+  }
+  return Object.values(groups)
+}
+
+const monthLabels = (monthsBack: number) => {
+  const labels: string[] = []
+  const now = new Date()
+  const names = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
+  for (let i = monthsBack - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    labels.push(names[d.getMonth()])
+  }
+  return labels
+}
+
+function useChartColors() {
+  const { theme } = useTheme()
+  const [colors, setColors] = useState({ mutedFg: "#a1a1aa", cardBorder: "rgba(0,0,0,0.06)" })
+
+  useEffect(() => {
+    const style = getComputedStyle(document.documentElement)
+    const mutedFg = style.getPropertyValue("--muted-fg").trim() || "#a1a1aa"
+    const cardBorder = style.getPropertyValue("--card-border").trim() || "#e4e4e7"
+    setColors({ mutedFg, cardBorder })
+    ChartJS.defaults.color = mutedFg
+    ChartJS.defaults.borderColor = cardBorder
+  }, [theme])
+
+  return colors
+}
+
+export function IncomeChart({ orders }: { orders: Order[] }) {
+  const { cardBorder } = useChartColors()
+  const data = useMemo(() => ({
+    labels: monthLabels(6),
+    datasets: [
+      {
+        label: "Ingresos",
+        data: groupRevenueByMonth(orders, 6),
+        borderColor: "#7657f5",
+        backgroundColor: "rgba(118, 87, 245, 0.13)",
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: "#4ad9f2",
+      },
+    ],
+  }), [orders])
+
+  return (
+    <div className="neo-card rounded-lg p-5">
+      <h3 className="text-sm font-bold text-foreground mb-4">Ingresos Mensuales</h3>
+      <Line data={data} options={{
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false } },
+          y: { grid: { color: cardBorder }, ticks: { callback: (v: string | number) => `L ${v}` } },
+        },
+      }} />
+    </div>
+  )
+}
+
+export function ProjectsChart({ orders }: { orders: Order[] }) {
+  const { cardBorder } = useChartColors()
+  const data = useMemo(() => ({
+    labels: monthLabels(6),
+    datasets: [
+      {
+        label: "Proyectos",
+        data: groupByMonth(orders, 6),
+        backgroundColor: "rgba(118, 87, 245, 0.72)",
+        borderRadius: 6,
+      },
+    ],
+  }), [orders])
+
+  return (
+    <div className="neo-card rounded-lg p-5">
+      <h3 className="text-sm font-bold text-foreground mb-4">Proyectos por Mes</h3>
+      <Bar data={data} options={{
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false } },
+          y: { grid: { color: cardBorder } },
+        },
+      }} />
+    </div>
+  )
+}
+
+export function CategoryChart({ categories, orders }: { categories: Category[]; orders: Order[] }) {
+  const data = useMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const o of orders) {
+      const catName = o.service?.category?.name ?? "Otros"
+      counts[catName] = (counts[catName] || 0) + 1
+    }
+    if (Object.keys(counts).length === 0) {
+      categories.forEach((c) => { counts[c.name] = 0 })
+    }
+    return {
+      labels: Object.keys(counts),
+      datasets: [
+        {
+          data: Object.values(counts),
+          backgroundColor: ["#7657f5", "#e14884", "#4ad9f2", "#f1bb66", "#14b8a6", "#f97316", "#a884ff", "#08b6d6"],
+          borderWidth: 0,
+        },
+      ],
+    }
+  }, [categories, orders])
+
+  return (
+    <div className="neo-card rounded-lg p-5">
+      <h3 className="text-sm font-bold text-foreground mb-4">Distribución por Categoría</h3>
+      <div className="flex justify-center">
+        <Doughnut data={data} options={{
+          responsive: true,
+          plugins: {
+            legend: {
+              position: "bottom" as const,
+              labels: { boxWidth: 12, padding: 12, font: { size: 11 } },
+            },
+          },
+          cutout: "65%",
+        }} />
+      </div>
+    </div>
+  )
+}
