@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
-import { createClient } from "@/lib/supabase/client"
 import { useAuth } from "@/contexts/AuthContext"
+import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
+import { useState } from "react"
 
 const STEPS = [
   { id: 1, title: "Bienvenido a FreelanceHub 🎉", desc: "Cuéntanos un poco sobre ti para personalizar tu experiencia." },
@@ -70,12 +70,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
   return (
     // Sin onClick en el backdrop — no se puede cerrar haciendo click afuera
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-<<<<<<< HEAD
-      <div className="neo-card w-full max-w-lg mx-4 overflow-hidden rounded-lg shadow-2xl animate-scale-in">
-=======
       <div className="bg-card-bg rounded-2xl shadow-2xl w-full max-w-lg mx-4 border border-card-border overflow-hidden animate-scale-in">
-
->>>>>>> ffd84dc (DB - Onboarding)
         {/* Progress bar */}
         <div className="h-1.5 bg-muted">
           <div
@@ -118,11 +113,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
                   onChange={e => { setName(e.target.value); setErrors({}) }}
                   placeholder="Tu nombre completo"
                   autoFocus
-<<<<<<< HEAD
-                  className="input-future w-full rounded-lg px-4 py-2.5 text-sm"
-=======
                   className={`w-full px-4 py-2.5 rounded-xl border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm transition-colors ${errors[1] ? "border-red-400" : "border-card-border"}`}
->>>>>>> ffd84dc (DB - Onboarding)
                 />
                 {errors[1] && <p className="text-xs text-red-500 mt-1">{errors[1]}</p>}
               </div>
@@ -178,27 +169,6 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
 
           {/* Step 3 — rol obligatorio */}
           {step === 3 && (
-<<<<<<< HEAD
-            <div className="grid grid-cols-2 gap-4">
-              {([
-                { value: "client", icon: "🛒", title: "Contratar", desc: "Busco talento para mis proyectos" },
-                { value: "freelancer", icon: "💼", title: "Trabajar", desc: "Ofrezco mis servicios profesionales" },
-              ] as const).map(opt => (
-                <button
-                  key={opt.value}
-                  onClick={() => setRole(opt.value)}
-                  className={`p-5 rounded-lg border-2 text-left transition-all ${
-                    role === opt.value
-                      ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20"
-                      : "border-card-border hover:border-indigo-300"
-                  }`}
-                >
-                  <div className="text-3xl mb-3">{opt.icon}</div>
-                  <div className="font-semibold text-foreground">{opt.title}</div>
-                  <div className="text-xs text-muted-fg mt-1">{opt.desc}</div>
-                </button>
-              ))}
-=======
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-4">
                 {([
@@ -229,7 +199,6 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
               <p className="text-xs text-muted-fg text-center pt-1">
                 Podrás cambiar tu rol después desde tu perfil
               </p>
->>>>>>> ffd84dc (DB - Onboarding)
             </div>
           )}
 
@@ -248,11 +217,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
             <button
               onClick={step < 3 ? handleNext : handleFinish}
               disabled={loading}
-<<<<<<< HEAD
-              className="btn-primary px-6 py-2.5 text-sm disabled:opacity-50"
-=======
               className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl text-sm transition-colors disabled:opacity-50 flex items-center gap-2"
->>>>>>> ffd84dc (DB - Onboarding)
             >
               {loading ? (
                 <>
