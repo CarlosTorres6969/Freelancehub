@@ -367,6 +367,25 @@ VALUES
   (gen_random_uuid(), 'f47ac10b-58cc-4372-a567-0e02b2c3d482', '{"sub":"f47ac10b-58cc-4372-a567-0e02b2c3d482","email":"pedro.ramirez@email.com"}', 'email', 'pedro.ramirez@email.com', now(), now(), now())
 ON CONFLICT (provider, provider_id) DO NOTHING;
 
+-- Fix: asegurar que los campos de texto no sean NULL (requerido por Supabase auth)
+UPDATE auth.users 
+SET 
+  confirmation_token = COALESCE(confirmation_token, ''),
+  recovery_token = COALESCE(recovery_token, ''),
+  email_change_token_new = COALESCE(email_change_token_new, ''),
+  email_change_token_current = COALESCE(email_change_token_current, ''),
+  email_change = COALESCE(email_change, ''),
+  phone_change = COALESCE(phone_change, ''),
+  phone_change_token = COALESCE(phone_change_token, ''),
+  reauthentication_token = COALESCE(reauthentication_token, ''),
+  email_change_confirm_status = COALESCE(email_change_confirm_status, 0)
+WHERE email IN (
+  'maria.garcia@email.com',
+  'juan.perez@email.com',
+  'ana.lopez@email.com',
+  'pedro.ramirez@email.com'
+);
+
 
 -- =====================================================
 -- PASO 5: SEED - Profiles

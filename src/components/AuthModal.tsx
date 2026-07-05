@@ -53,20 +53,34 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           },
         })
 
-        if (signUpError) throw signUpError
+        if (signUpError) {
+          setError(signUpError.message || "Error al crear la cuenta")
+          return
+        }
         setShowOnboarding(true)
         onClose()
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
+        const { data, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         })
 
-        if (signInError) throw signInError
+        console.log("signIn result:", { data, error: signInError })
+
+        if (signInError) {
+          setError(signInError.message || signInError.status?.toString() || "Credenciales incorrectas")
+          return
+        }
         onClose()
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Error de autenticación"
+      let msg = "Error de autenticación"
+      if (err instanceof Error) {
+        msg = err.message
+      } else if (typeof err === "object" && err !== null) {
+        const e = err as Record<string, unknown>
+        msg = (e.message as string) || (e.error_description as string) || (e.code as string) || JSON.stringify(err)
+      }
       setError(msg)
     } finally {
       setLoading(false)

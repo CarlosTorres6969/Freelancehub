@@ -16,6 +16,8 @@ export default function ProfilePage() {
   const [location, setLocation] = useState("")
   const [skills, setSkills] = useState("")
   const [languages, setLanguages] = useState("")
+  const [role, setRole] = useState<"client" | "freelancer">("client")
+  const [changingRole, setChangingRole] = useState(false)
   const [loading, setLoading] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState("")
@@ -30,8 +32,18 @@ export default function ProfilePage() {
       setLocation(profile.location ?? "")
       setSkills(profile.skills?.join(", ") ?? "")
       setLanguages(profile.languages?.join(", ") ?? "")
+      setRole((profile.role === "freelancer" ? "freelancer" : "client"))
     }
   }, [profile])
+
+  async function handleRoleChange(newRole: "client" | "freelancer") {
+    if (!user) return
+    setChangingRole(true)
+    await supabase.from("profiles").update({ role: newRole }).eq("id", user.id)
+    await refreshProfile()
+    setRole(newRole)
+    setChangingRole(false)
+  }
 
   async function handleSave() {
     if (!user) return
@@ -84,7 +96,7 @@ export default function ProfilePage() {
         <AnimatedSection>
           <div className="neo-card flex items-center gap-6 rounded-lg p-6">
             <AvatarUpload />
-            <div>
+            <div className="flex-1">
               <h2 className="text-xl font-semibold">{profile?.name ?? "Usuario"}</h2>
               <p className="text-sm text-muted-fg">{user.email}</p>
               {profile?.role && (
@@ -95,6 +107,39 @@ export default function ProfilePage() {
             </div>
           </div>
         </AnimatedSection>
+
+        {/* Cambio de rol — solo si no es admin */}
+        {profile?.role !== "admin" && (
+          <AnimatedSection>
+            <div className="p-6 rounded-xl border border-card-border bg-card-bg">
+              <h3 className="text-sm font-semibold text-foreground mb-1">Tipo de cuenta</h3>
+              <p className="text-xs text-muted-fg mb-4">Cambia entre modo cliente y freelancer en cualquier momento.</p>
+              <div className="grid grid-cols-2 gap-3">
+                {([
+                  { value: "client", icon: "🛒", label: "Cliente", desc: "Contratar servicios" },
+                  { value: "freelancer", icon: "💼", label: "Freelancer", desc: "Ofrecer servicios" },
+                ] as const).map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => handleRoleChange(opt.value)}
+                    disabled={changingRole || role === opt.value}
+                    className={`p-4 rounded-xl border-2 text-left transition-all disabled:cursor-default ${
+                      role === opt.value
+                        ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20"
+                        : "border-card-border hover:border-indigo-300"
+                    }`}
+                  >
+                    <div className="text-2xl mb-1">{opt.icon}</div>
+                    <div className="text-sm font-semibold text-foreground">{opt.label}</div>
+                    <div className="text-xs text-muted-fg">{opt.desc}</div>
+                    {role === opt.value && <div className="text-xs text-indigo-600 dark:text-indigo-400 mt-1 font-medium">✓ Actual</div>}
+                  </button>
+                ))}
+              </div>
+              {changingRole && <p className="text-xs text-muted-fg mt-2 text-center animate-pulse">Actualizando...</p>}
+            </div>
+          </AnimatedSection>
+        )}
 
         {error && (
           <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
