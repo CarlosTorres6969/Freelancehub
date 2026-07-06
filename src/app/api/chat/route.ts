@@ -55,7 +55,7 @@ async function buildContext(message: string, userId: string | null) {
   ) {
     const { data } = await supabase
       .from("services")
-      .select("title, price, rating, sales, delivery_time, category:categories(name)")
+      .select("title, price, rating, sales, delivery_time, categories(name)")
       .eq("active", true)
       .order("sales", { ascending: false })
       .limit(5)
@@ -65,8 +65,10 @@ async function buildContext(message: string, userId: string | null) {
         "SERVICIOS MÁS VENDIDOS:\n" +
           data
             .map(
-              s =>
-                `- "${s.title}" | Precio: L${s.price} | Rating: ${s.rating}⭐ | Ventas: ${s.sales} | Entrega: ${s.delivery_time} | Categoría: ${(s.category as { name: string } | null)?.name ?? "N/A"}`
+              s => {
+                const categoryName = (s.categories as any)?.name ?? "N/A"
+                return `- "${s.title}" | Precio: L${s.price} | Rating: ${s.rating}⭐ | Ventas: ${s.sales} | Entrega: ${s.delivery_time} | Categoría: ${categoryName}`
+              }
             )
             .join("\n")
       )
@@ -82,7 +84,7 @@ async function buildContext(message: string, userId: string | null) {
   ) {
     const { data } = await supabase
       .from("services")
-      .select("title, price, rating, delivery_time, category:categories(name)")
+      .select("title, price, rating, delivery_time, categories(name)")
       .eq("active", true)
       .order("price", { ascending: true })
       .limit(5)
@@ -92,8 +94,10 @@ async function buildContext(message: string, userId: string | null) {
         "SERVICIOS MÁS BARATOS:\n" +
           data
             .map(
-              s =>
-                `- "${s.title}" | Precio: L${s.price} | Rating: ${s.rating}⭐ | Entrega: ${s.delivery_time} | Categoría: ${(s.category as { name: string } | null)?.name ?? "N/A"}`
+              s => {
+                const categoryName = (s.categories as any)?.name ?? "N/A"
+                return `- "${s.title}" | Precio: L${s.price} | Rating: ${s.rating}⭐ | Entrega: ${s.delivery_time} | Categoría: ${categoryName}`
+              }
             )
             .join("\n")
       )
@@ -112,7 +116,7 @@ async function buildContext(message: string, userId: string | null) {
     const term = matchedTerm ?? ""
     const { data } = await supabase
       .from("services")
-      .select("title, price, rating, sales, delivery_time, category:categories(name), tags")
+      .select("title, price, rating, sales, delivery_time, categories(name), tags")
       .eq("active", true)
       .or(
         term
@@ -127,8 +131,10 @@ async function buildContext(message: string, userId: string | null) {
         `SERVICIOS ENCONTRADOS${term ? ` (relacionados con "${term}")` : ""}:\n` +
           data
             .map(
-              s =>
-                `- "${s.title}" | L${s.price} | ${s.rating}⭐ | Entrega: ${s.delivery_time} | Categoría: ${(s.category as { name: string } | null)?.name ?? "N/A"}`
+              s => {
+                const categoryName = (s.categories as any)?.name ?? "N/A"
+                return `- "${s.title}" | L${s.price} | ${s.rating}⭐ | Entrega: ${s.delivery_time} | Categoría: ${categoryName}`
+              }
             )
             .join("\n")
       )
@@ -147,7 +153,7 @@ async function buildContext(message: string, userId: string | null) {
   ) {
     const { data } = await supabase
       .from("orders")
-      .select("status, price, total, created_at, service:services(title)")
+      .select("status, price, total, created_at, services(title)")
       .eq("buyer_id", userId)
       .order("created_at", { ascending: false })
       .limit(10)
@@ -157,9 +163,9 @@ async function buildContext(message: string, userId: string | null) {
         "HISTORIAL DE PEDIDOS DEL USUARIO:\n" +
           data
             .map(o => {
-              const service = o.service as { title: string } | null
+              const service = (o.services as any)?.title ?? "Servicio eliminado"
               const date = new Date(o.created_at).toLocaleDateString("es-HN")
-              return `- "${service?.title ?? "Servicio eliminado"}" | Estado: ${o.status} | Total: L${o.total} | Fecha: ${date}`
+              return `- "${service}" | Estado: ${o.status} | Total: L${o.total} | Fecha: ${date}`
             })
             .join("\n")
       )
@@ -177,7 +183,7 @@ async function buildContext(message: string, userId: string | null) {
   ) {
     const { data } = await supabase
       .from("favorites")
-      .select("service:services(title, price, rating)")
+      .select("services(title, price, rating)")
       .eq("user_id", userId)
       .limit(10)
 
@@ -186,7 +192,7 @@ async function buildContext(message: string, userId: string | null) {
         "FAVORITOS GUARDADOS DEL USUARIO:\n" +
           data
             .map(f => {
-              const s = f.service as { title: string; price: number; rating: number } | null
+              const s = f.services as any
               return s ? `- "${s.title}" | L${s.price} | ${s.rating}⭐` : null
             })
             .filter(Boolean)
