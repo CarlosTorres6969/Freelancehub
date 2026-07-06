@@ -13,7 +13,7 @@ import {
   X,
 } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
-import AuthModal from "./AuthModal"
+import AuthModal, { type AuthMode } from "./AuthModal"
 import NotificationBell from "./NotificationBell"
 import ThemeToggle from "./ThemeToggle"
 import { useFavorites } from "@/contexts/FavoritesContext"
@@ -27,12 +27,28 @@ const navLinks = [
 ]
 
 export default function Navbar() {
-  const { user, profile, signOut } = useAuth()
+  const { user, profile, signOut, loading } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
   const [authOpen, setAuthOpen] = useState(false)
+  const [authMode, setAuthMode] = useState<AuthMode>("login")
   const [profileOpen, setProfileOpen] = useState(false)
   const { favorites } = useFavorites()
   const profileRef = useRef<HTMLDivElement>(null)
+
+  // El middleware redirige rutas protegidas a "/?auth=login" — aquí se consume
+  // ese parámetro para abrir el modal correspondiente.
+  useEffect(() => {
+    if (loading || user) return
+    const params = new URLSearchParams(window.location.search)
+    const auth = params.get("auth")
+    if (auth === "login" || auth === "register") {
+      setAuthMode(auth)
+      setAuthOpen(true)
+      params.delete("auth")
+      const qs = params.toString()
+      window.history.replaceState(null, "", window.location.pathname + (qs ? `?${qs}` : ""))
+    }
+  }, [loading, user])
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -50,7 +66,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-40 border-b border-card-border bg-nav-bg backdrop-blur-2xl">
+      <nav className="sticky top-0 z-40 border-b border-card-border bg-nav-bg/95">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <Link href="/" className="group flex items-center gap-3" aria-label="FreelanceHub">
@@ -76,7 +92,7 @@ export default function Navbar() {
               <ThemeToggle />
               <Link
                 href="/favorites"
-                className="relative rounded-lg p-2 text-muted-fg transition-colors hover:bg-accent hover:text-foreground"
+                className="icon-btn-3d relative rounded-lg p-2 text-muted-fg hover:bg-accent hover:text-foreground"
                 aria-label="Favoritos"
               >
                 <Heart className="h-5 w-5" strokeWidth={1.8} />
@@ -92,7 +108,7 @@ export default function Navbar() {
                 <div className="relative" ref={profileRef}>
                   <button
                     onClick={() => setProfileOpen(!profileOpen)}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 via-fuchsia-500 to-cyan-400 text-xs font-bold text-white shadow-lg shadow-violet-500/20 transition-transform hover:scale-105"
+                    className="icon-btn-3d flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 via-fuchsia-500 to-cyan-400 text-xs font-bold text-white shadow-lg shadow-violet-500/20"
                     aria-label="Abrir menú de perfil"
                   >
                     {initials}
@@ -143,12 +159,20 @@ export default function Navbar() {
                   )}
                 </div>
               ) : (
-                <button
-                  onClick={() => setAuthOpen(true)}
-                  className="btn-primary px-4 py-2 text-sm"
-                >
-                  Registrarse
-                </button>
+                <div className="flex items-center gap-2 ml-1">
+                  <button
+                    onClick={() => { setAuthMode("login"); setAuthOpen(true) }}
+                    className="btn-secondary hover-lift-3d px-4 py-2 text-sm"
+                  >
+                    Iniciar Sesión
+                  </button>
+                  <button
+                    onClick={() => { setAuthMode("register"); setAuthOpen(true) }}
+                    className="btn-primary hover-lift-3d px-4 py-2 text-sm"
+                  >
+                    Registrarse
+                  </button>
+                </div>
               )}
             </div>
 
@@ -187,19 +211,27 @@ export default function Navbar() {
                   Cerrar Sesión
                 </button>
               ) : (
-                <button
-                  onClick={() => { setAuthOpen(true); setMenuOpen(false) }}
-                  className="btn-primary w-full px-3 py-2 text-sm"
-                >
-                  Registrarse
-                </button>
+                <div className="space-y-2">
+                  <button
+                    onClick={() => { setAuthMode("login"); setAuthOpen(true); setMenuOpen(false) }}
+                    className="btn-secondary w-full px-3 py-2 text-sm"
+                  >
+                    Iniciar Sesión
+                  </button>
+                  <button
+                    onClick={() => { setAuthMode("register"); setAuthOpen(true); setMenuOpen(false) }}
+                    className="btn-primary w-full px-3 py-2 text-sm"
+                  >
+                    Registrarse
+                  </button>
+                </div>
               )}
             </div>
           )}
         </div>
       </nav>
 
-      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
+      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} initialMode={authMode} />
     </>
   )
 }

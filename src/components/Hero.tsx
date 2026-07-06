@@ -27,7 +27,7 @@ export default function Hero() {
       })
     }
     loadStats()
-  }, [])
+  }, [supabase])
 
   const statItems = [
     { value: stats.projects, label: "Proyectos completados", icon: Briefcase },
@@ -55,7 +55,7 @@ export default function Hero() {
 
       <div className="relative mx-auto flex min-h-[calc(88svh-4rem)] max-w-7xl flex-col justify-center px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
         <div className="max-w-4xl">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-lg border border-white/18 bg-white/10 px-3 py-2 text-sm text-white/78 backdrop-blur-xl animate-fade-in">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-lg border border-white/18 bg-white/20 px-3 py-2 text-sm text-white/78 animate-fade-in">
             <Sparkles className="h-4 w-4 text-cyan-200" strokeWidth={1.8} />
             Talento centroamericano listo para crear
           </div>
@@ -84,7 +84,7 @@ export default function Hero() {
             </Link>
             <Link
               href="/dashboard"
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/22 bg-white/10 px-7 py-3 text-sm font-bold text-white backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:border-white/36 hover:bg-white/16 sm:text-base"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/22 bg-white/20 px-7 py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:border-white/36 hover:bg-white/30 sm:text-base"
             >
               Ver dashboard
               <BarChart3 className="h-4 w-4" strokeWidth={1.9} />
@@ -99,7 +99,7 @@ export default function Hero() {
           {statItems.map((stat) => {
             const Icon = stat.icon
             return (
-              <div key={stat.label} className="rounded-lg border border-white/14 bg-white/10 p-4 backdrop-blur-2xl transition-transform hover:-translate-y-1">
+              <div key={stat.label} className="rounded-lg border border-white/14 bg-white/20 p-4 transition-transform hover:-translate-y-1">
                 <Icon className="mb-4 h-5 w-5 text-cyan-200" strokeWidth={1.8} />
                 <div className="text-2xl font-black text-white sm:text-3xl">{stat.value}</div>
                 <div className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-white/52">{stat.label}</div>

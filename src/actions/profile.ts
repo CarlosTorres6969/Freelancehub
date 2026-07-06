@@ -9,10 +9,17 @@ export async function updateProfile(formData: FormData) {
 
   const updates: Record<string, unknown> = {}
 
-  const fields = ["name", "title", "description", "bio", "location", "hourly_rate"]
+  const fields = ["name", "title", "description", "bio", "location"]
   for (const field of fields) {
     const value = formData.get(field)
     if (value) updates[field] = value
+  }
+
+  const hourlyRate = formData.get("hourly_rate")
+  if (hourlyRate) {
+    const rate = parseFloat(hourlyRate as string)
+    if (Number.isNaN(rate) || rate < 0 || rate > 100000) throw new Error("Tarifa por hora inválida")
+    updates.hourly_rate = rate
   }
 
   const skills = formData.get("skills")

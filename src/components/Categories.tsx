@@ -47,7 +47,7 @@ export default function Categories() {
       .then(({ data }) => {
         if (data) setCategories(data)
       })
-  }, [])
+  }, [supabase])
 
   return (
     <section className="relative overflow-hidden border-y border-card-border bg-background/72 py-20 sm:py-24">

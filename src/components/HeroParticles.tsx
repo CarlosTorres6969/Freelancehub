@@ -44,14 +44,13 @@ function FloatingParticles3D() {
   if (!mounted) return null
 
   const layers = [
-    { count: 8, size: [20, 50], color: "bg-indigo-500/20", depth: 0.3 },
-    { count: 6, size: [30, 70], color: "bg-purple-500/15", depth: 0.5 },
-    { count: 4, size: [50, 100], color: "bg-emerald-500/10", depth: 0.7 },
-    { count: 3, size: [80, 150], color: "bg-pink-500/8", depth: 0.9 },
+    { count: 4, size: [20, 40], color: "bg-indigo-500/15", depth: 0.3 },
+    { count: 3, size: [30, 50], color: "bg-purple-500/10", depth: 0.5 },
+    { count: 2, size: [40, 60], color: "bg-emerald-500/8", depth: 0.7 },
   ]
 
   const allParticles = layers.flatMap((layer) =>
-    Array.from({ length: layer.count }).map((_, i) => ({
+    Array.from({ length: layer.count }, () => ({
       depth: layer.depth,
       top: 10 + Math.random() * 80,
       left: 10 + Math.random() * 80,
@@ -63,7 +62,7 @@ function FloatingParticles3D() {
   )
 
   return (
-    <div ref={sectionRef} className="absolute inset-0 overflow-hidden pointer-events-none" style={{ perspective: "1200px", willChange: "transform" }}>
+    <div ref={sectionRef} className="absolute inset-0 overflow-hidden pointer-events-none" style={{ perspective: "1200px" }}>
       {allParticles.map((p, i) => (
         <div
           key={i}
@@ -71,13 +70,12 @@ function FloatingParticles3D() {
           data-depth={p.depth}
           data-base-tx={0}
           data-base-ty={0}
-          className={`absolute rounded-full ${p.color} blur-sm`}
+          className={`absolute rounded-full ${p.color}`}
           style={{
             top: `${p.top}%`,
             left: `${p.left}%`,
             width: `${p.size}px`,
             height: `${p.size}px`,
-            willChange: "transform",
             transform: "translate3d(0, 0, 0)",
             animation: `float-3d ${p.duration}s ease-in-out ${p.delay}s infinite`,
           }}

@@ -19,7 +19,7 @@ export default function Testimonials() {
       .then(({ data }) => {
         if (data) setTestimonials(data)
       })
-  }, [])
+  }, [supabase])
 
   return (
     <section className="mesh-surface py-20 sm:py-24">

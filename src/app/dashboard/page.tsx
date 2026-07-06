@@ -1,25 +1,32 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { CheckCircle2, CircleDollarSign, Layers3, PackageCheck, Zap } from "lucide-react"
+import Link from "next/link"
+import { CheckCircle2, CircleDollarSign, Layers3, PackageCheck, Pencil, Plus, Zap } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useAuth } from "@/contexts/AuthContext"
 import AnimatedSection from "@/components/AnimatedSection"
+import OrderActions from "@/components/OrderActions"
+import { setServiceActive } from "@/actions/services"
 import { IncomeChart, ProjectsChart, CategoryChart } from "@/components/Charts"
 import type { Order, Service, Category } from "@/types"
 
 const statusStyles: Record<string, string> = {
   completed: "bg-emerald-500/12 text-emerald-600 dark:text-emerald-300",
   in_progress: "bg-cyan-500/12 text-cyan-600 dark:text-cyan-300",
+  delivered: "bg-violet-500/12 text-violet-600 dark:text-violet-300",
   pending: "bg-amber-500/14 text-amber-700 dark:text-amber-300",
   cancelled: "bg-rose-500/12 text-rose-600 dark:text-rose-300",
+  disputed: "bg-orange-500/14 text-orange-700 dark:text-orange-300",
 }
 
 const statusLabels: Record<string, string> = {
   completed: "Completado",
   in_progress: "En progreso",
+  delivered: "Entregado",
   pending: "Pendiente",
   cancelled: "Cancelado",
+  disputed: "En disputa",
 }
 
 export default function DashboardPage() {
@@ -46,7 +53,6 @@ export default function DashboardPage() {
           .from("services")
           .select("*, category:categories(*)")
           .eq("freelancer_id", userId)
-          .eq("active", true)
           .order("created_at", { ascending: false }),
         supabase.from("categories").select("*").order("name"),
       ])
@@ -57,7 +63,18 @@ export default function DashboardPage() {
       setLoading(false)
     }
     load()
-  }, [user])
+  }, [user, supabase])
+
+  async function handleToggleActive(service: Service) {
+    const next = !service.active
+    setMyServices((prev) => prev.map((s) => (s.id === service.id ? { ...s, active: next } : s)))
+    try {
+      await setServiceActive(service.id, next)
+    } catch {
+      // Revierte el cambio optimista si el servidor lo rechaza.
+      setMyServices((prev) => prev.map((s) => (s.id === service.id ? { ...s, active: !next } : s)))
+    }
+  }
 
   if (loading) {
     return (
@@ -190,26 +207,40 @@ export default function DashboardPage() {
                   <thead>
                     <tr className="border-b border-card-border text-muted-fg">
                       <th className="px-6 py-3 text-left font-bold">Servicio</th>
+                      <th className="px-6 py-3 text-left font-bold">Rol</th>
                       <th className="px-6 py-3 text-left font-bold">Monto</th>
                       <th className="px-6 py-3 text-left font-bold">Estado</th>
-                      <th className="px-6 py-3 text-left font-bold">Fecha</th>
+                      <th className="px-6 py-3 text-left font-bold">Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {orders.map((order) => (
-                      <tr key={order.id} className="border-b border-card-border transition-colors hover:bg-accent/60">
-                        <td className="px-6 py-4 text-muted-fg">{order.service?.title ?? "Servicio"}</td>
-                        <td className="px-6 py-4 font-bold text-foreground">L {order.total.toLocaleString()}</td>
-                        <td className="px-6 py-4">
-                          <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${statusStyles[order.status] ?? ""}`}>
-                            {statusLabels[order.status] ?? order.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-muted-fg">
-                          {new Date(order.created_at).toLocaleDateString("es-HN")}
-                        </td>
-                      </tr>
-                    ))}
+                    {orders.map((order) => {
+                      const role = order.freelancer_id === user?.id ? "freelancer" : "buyer"
+                      return (
+                        <tr key={order.id} className="border-b border-card-border align-top transition-colors hover:bg-accent/60">
+                          <td className="px-6 py-4">
+                            <div className="font-medium text-foreground">{order.service?.title ?? "Servicio"}</div>
+                            <div className="text-xs text-muted-fg">{new Date(order.created_at).toLocaleDateString("es-HN")}</div>
+                            {order.status === "delivered" && order.delivery_note && (
+                              <div className="mt-1 text-xs text-violet-600 dark:text-violet-300">Entrega: {order.delivery_note}</div>
+                            )}
+                            {order.status === "disputed" && order.dispute_reason && (
+                              <div className="mt-1 text-xs text-orange-600 dark:text-orange-300">Disputa: {order.dispute_reason}</div>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-muted-fg">{role === "freelancer" ? "Vendedor" : "Comprador"}</td>
+                          <td className="px-6 py-4 font-bold text-foreground">L {order.total.toLocaleString()}</td>
+                          <td className="px-6 py-4">
+                            <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${statusStyles[order.status] ?? ""}`}>
+                              {statusLabels[order.status] ?? order.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <OrderActions order={order} role={role} />
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -222,24 +253,53 @@ export default function DashboardPage() {
 
       {activeTab === "services" && (
         <AnimatedSection key="services">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="font-bold text-foreground">Mis servicios</h2>
+            <Link href="/dashboard/services/new" className="btn-primary px-4 py-2 text-sm">
+              <Plus className="h-4 w-4" strokeWidth={2} />
+              Publicar servicio
+            </Link>
+          </div>
           {myServices.length > 0 ? (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {myServices.map((service) => (
-                <div key={service.id} className="neo-card rounded-lg p-5">
+                <div key={service.id} className={`neo-card rounded-lg p-5 ${service.active ? "" : "opacity-70"}`}>
                   <div className="mb-2 flex items-start justify-between gap-3">
-                    <span className="chip rounded-lg px-2 py-1 text-xs font-bold">
-                      {service.category?.name}
-                    </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="chip rounded-lg px-2 py-1 text-xs font-bold">
+                        {service.category?.name}
+                      </span>
+                      {!service.active && (
+                        <span className="rounded-lg bg-rose-500/12 px-2 py-1 text-xs font-bold text-rose-600 dark:text-rose-300">
+                          Pausado
+                        </span>
+                      )}
+                    </div>
                     <span className="text-sm font-black text-foreground">L {service.price.toLocaleString()}</span>
                   </div>
                   <h3 className="mb-1 font-bold text-foreground">{service.title}</h3>
                   <p className="mb-3 line-clamp-2 text-sm text-muted-fg">{service.description}</p>
-                  <div className="flex items-center justify-between">
+                  <div className="mb-3 flex items-center justify-between">
                     <div className="flex items-center gap-1 text-sm text-muted-fg">
                       <PackageCheck className="h-4 w-4 text-cyan-500" strokeWidth={1.7} />
                       {service.rating} ({service.reviews_count})
                     </div>
                     <span className="text-xs text-muted-fg">{service.sales} vendidos</span>
+                  </div>
+                  <div className="flex items-center gap-2 border-t border-card-border pt-3">
+                    <Link
+                      href={`/dashboard/services/${service.id}/edit`}
+                      className="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-semibold text-muted-fg transition-colors hover:bg-accent hover:text-foreground"
+                    >
+                      <Pencil className="h-3.5 w-3.5" strokeWidth={1.8} />
+                      Editar
+                    </Link>
+                    <button
+                      onClick={() => handleToggleActive(service)}
+                      className="rounded-md px-3 py-1.5 text-xs font-semibold text-muted-fg transition-colors hover:bg-accent hover:text-foreground"
+                    >
+                      {service.active ? "Pausar" : "Reactivar"}
+                    </button>
                   </div>
                 </div>
               ))}

@@ -38,7 +38,7 @@ export default function MarketplacePage() {
       setLoading(false)
     }
     load()
-  }, [])
+  }, [supabase])
 
   const filteredServices = useMemo(() => {
     let result = [...services]

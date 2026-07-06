@@ -9,7 +9,12 @@ export async function addReview(formData: FormData) {
 
   const serviceId = formData.get("serviceId") as string
   const rating = parseInt(formData.get("rating") as string)
-  const content = formData.get("content") as string
+  const content = ((formData.get("content") as string) ?? "").trim()
+
+  if (!serviceId) throw new Error("Servicio inválido")
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) throw new Error("La calificación debe estar entre 1 y 5")
+  if (!content) throw new Error("La reseña no puede estar vacía")
+  if (content.length > 2000) throw new Error("La reseña es demasiado larga")
 
   const { data: profile } = await supabase
     .from("profiles")

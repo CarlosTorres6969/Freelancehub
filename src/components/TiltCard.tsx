@@ -33,20 +33,20 @@ export default function TiltCard({
     const centerY = rect.height / 2
     const mx = x - rect.left
     const my = y - rect.top
-    const rotateX = ((my - centerY) / centerY) * -tiltDegree
-    const rotateY = ((mx - centerX) / centerX) * tiltDegree
+    const rotateX = ((my - centerY) / centerY) * -tiltDegree * 0.5
+    const rotateY = ((mx - centerX) / centerX) * tiltDegree * 0.5
 
     setStyle({
       transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(${scale}, ${scale}, ${scale})`,
-      transition: `transform ${speed}ms ease-out`,
+      transition: `transform ${speed}ms cubic-bezier(0.4, 0, 0.2, 1)`,
     })
 
     if (glare) {
       const glareX = (mx / rect.width) * 100
       const glareY = (my / rect.height) * 100
       setGlareStyle({
-        opacity: 0.15,
-        background: `radial-gradient(circle at ${glareX}% ${glareY}%, rgba(255,255,255,0.6), transparent 60%)`,
+        opacity: 0.1,
+        background: `radial-gradient(circle at ${glareX}% ${glareY}%, rgba(255,255,255,0.4), transparent 50%)`,
       })
     }
     rafRef.current = null
@@ -70,7 +70,7 @@ export default function TiltCard({
     }
     setStyle({
       transform: `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`,
-      transition: `transform ${speed * 1.5}ms ease-out`,
+      transition: `transform ${speed * 1.2}ms cubic-bezier(0.4, 0, 0.2, 1)`,
     })
     setGlareStyle({ opacity: 0 })
   }, [speed])
@@ -85,7 +85,7 @@ export default function TiltCard({
     <div
       ref={ref}
       className={`relative ${className}`}
-      style={{ perspective: "1000px", transformStyle: "preserve-3d", willChange: "transform" }}
+      style={{ perspective: "1000px", transformStyle: "preserve-3d" }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
@@ -93,7 +93,7 @@ export default function TiltCard({
         {children}
         {glare && (
           <div
-            className="pointer-events-none absolute inset-0 rounded-2xl transition-opacity duration-300"
+            className="pointer-events-none absolute inset-0 rounded-2xl transition-opacity duration-200"
             style={glareStyle}
           />
         )}

@@ -1,18 +1,21 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { X } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import OnboardingModal from "./OnboardingModal"
 
+export type AuthMode = "login" | "register"
+
 interface AuthModalProps {
   isOpen: boolean
   onClose: () => void
+  initialMode?: AuthMode
 }
 
-export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
-  const [mode, setMode] = useState<"login" | "register">("login")
+export default function AuthModal({ isOpen, onClose, initialMode = "login" }: AuthModalProps) {
+  const mode = initialMode
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
@@ -21,6 +24,13 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [successMsg, setSuccessMsg] = useState("")
   const [showOnboarding, setShowOnboarding] = useState(false)
   const supabase = createClient()
+
+  useEffect(() => {
+    if (isOpen) {
+      setError("")
+      setSuccessMsg("")
+    }
+  }, [isOpen, initialMode])
 
   if (!isOpen && !showOnboarding) return null
 
@@ -60,12 +70,10 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         setShowOnboarding(true)
         onClose()
       } else {
-        const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         })
-
-        console.log("signIn result:", { data, error: signInError })
 
         if (signInError) {
           setError(signInError.message || signInError.status?.toString() || "Credenciales incorrectas")
@@ -120,31 +128,6 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div className="flex gap-1 rounded-lg border border-card-border bg-muted p-1">
-            <button
-              type="button"
-              onClick={() => { setMode("login"); setError(""); setSuccessMsg("") }}
-              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all duration-300 ${
-                mode === "login"
-                  ? "bg-foreground text-background shadow-sm"
-                  : "text-muted-fg hover:text-foreground"
-              }`}
-            >
-              Iniciar Sesión
-            </button>
-            <button
-              type="button"
-              onClick={() => { setMode("register"); setError(""); setSuccessMsg("") }}
-              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all duration-300 ${
-                mode === "register"
-                  ? "bg-foreground text-background shadow-sm"
-                  : "text-muted-fg hover:text-foreground"
-              }`}
-            >
-              Registrarse
-            </button>
-          </div>
-
           {error && (
             <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-sm">
               {error}

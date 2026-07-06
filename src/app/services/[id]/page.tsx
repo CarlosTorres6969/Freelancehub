@@ -7,8 +7,36 @@ import ReviewForm from "@/components/ReviewForm"
 import TrackRecentlyViewed from "@/components/TrackRecentlyViewed"
 import RecentlyViewed from "@/components/RecentlyViewed"
 import AddToFavorites from "@/components/AddToFavorites"
+import type { Metadata } from "next"
 
 export const revalidate = 60
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  const { id } = await params
+  const supabase = await createClient()
+  const { data: service } = await supabase
+    .from("services")
+    .select("title, description, images")
+    .eq("id", id)
+    .single()
+
+  if (!service) return { title: "Servicio no encontrado" }
+
+  return {
+    title: service.title,
+    description: service.description?.slice(0, 160),
+    openGraph: {
+      title: service.title,
+      description: service.description?.slice(0, 160),
+      images: service.images?.length ? [service.images[0]] : undefined,
+      type: "website",
+    },
+  }
+}
 
 export default async function ServiceDetailPage({
   params,
@@ -88,7 +116,7 @@ export default async function ServiceDetailPage({
               <div className="flex items-center gap-4 mb-4">
                 <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-violet-500 via-fuchsia-500 to-cyan-400 text-lg font-bold text-white shadow-lg shadow-violet-500/20">
                   {service.freelancer.avatar_url ? (
-                    <img src={service.freelancer.avatar_url} alt="" className="h-full w-full object-cover" />
+                    <img src={service.freelancer.avatar_url} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
                   ) : (
                     service.freelancer.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
                   )}

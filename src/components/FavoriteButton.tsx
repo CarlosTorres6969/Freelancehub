@@ -13,7 +13,7 @@ export default function FavoriteButton({ serviceId }: { serviceId: string }) {
   return (
     <button
       onClick={(e) => { e.preventDefault(); toggleFavorite(serviceId) }}
-      className={`w-8 h-8 rounded-full flex items-center justify-center transition-all backdrop-blur-sm ${
+      className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
         fav
           ? "bg-red-500 text-white shadow-lg"
           : "bg-card-bg/80 text-muted-fg hover:bg-accent"

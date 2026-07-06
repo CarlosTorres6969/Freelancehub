@@ -2,8 +2,32 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import ServiceCard from "@/components/ServiceCard"
+import type { Metadata } from "next"
 
 export const revalidate = 60
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  const { id } = await params
+  const supabase = await createClient()
+  const { data: freelancer } = await supabase
+    .from("profiles")
+    .select("name, title, description")
+    .eq("id", id)
+    .single()
+
+  if (!freelancer) return { title: "Freelancer no encontrado" }
+
+  const description = freelancer.description?.slice(0, 160) ?? `Perfil de ${freelancer.name} en FreelanceHub.`
+  return {
+    title: `${freelancer.name}${freelancer.title ? ` — ${freelancer.title}` : ""}`,
+    description,
+    openGraph: { title: freelancer.name, description, type: "profile" },
+  }
+}
 
 export default async function FreelancerProfilePage({
   params,
@@ -53,7 +77,7 @@ export default async function FreelancerProfilePage({
         <div className="flex flex-col sm:flex-row items-start gap-6">
           <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-violet-500 via-fuchsia-500 to-cyan-400 text-3xl font-black text-white shadow-lg shadow-violet-500/20">
             {freelancer.avatar_url ? (
-              <img src={freelancer.avatar_url} alt="" className="w-full h-full object-cover" />
+              <img src={freelancer.avatar_url} alt="" decoding="async" className="w-full h-full object-cover" />
             ) : (
               initials
             )}

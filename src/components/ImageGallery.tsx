@@ -14,6 +14,7 @@ export default function ImageGallery({ images }: { images?: string[] }) {
           <img
             src={images[active]}
             alt=""
+            decoding="async"
             className="h-full w-full object-cover"
           />
         ) : (
@@ -37,7 +38,7 @@ export default function ImageGallery({ images }: { images?: string[] }) {
                   : "border-card-border opacity-60 hover:opacity-100"
               }`}
             >
-              <img src={src} alt="" className="h-full w-full rounded-md object-cover" />
+              <img src={src} alt="" loading="lazy" decoding="async" className="h-full w-full rounded-md object-cover" />
             </button>
           ))}
         </div>

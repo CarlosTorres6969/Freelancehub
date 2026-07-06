@@ -124,7 +124,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
                   value={location}
                   onChange={e => setLocation(e.target.value)}
                   placeholder="Ciudad, País"
-                  className="input-future w-full rounded-lg px-4 py-2.5 text-sm"
+                  className="w-full px-4 py-2.5 rounded-xl border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm transition-colors border-card-border"
                 />
               </div>
             </div>
@@ -141,7 +141,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
                   onChange={e => setTitle(e.target.value)}
                   placeholder="Ej: Diseñador UI/UX, Desarrollador Full Stack"
                   autoFocus
-                  className="input-future w-full rounded-lg px-4 py-2.5 text-sm"
+                  className="w-full px-4 py-2.5 rounded-xl border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm transition-colors border-card-border"
                 />
                 <p className="text-xs text-muted-fg mt-1">Puedes completarlo después desde tu perfil</p>
               </div>
@@ -152,7 +152,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
                   value={skills}
                   onChange={e => setSkills(e.target.value)}
                   placeholder="React, Figma, SEO (separadas por coma)"
-                  className="input-future w-full rounded-lg px-4 py-2.5 text-sm"
+                  className="w-full px-4 py-2.5 rounded-xl border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm transition-colors border-card-border"
                 />
                 {skills && (
                   <div className="flex flex-wrap gap-1.5 mt-2">

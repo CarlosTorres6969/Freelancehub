@@ -125,7 +125,7 @@ export default function HowItWorksPage() {
 
       <AnimatedSection>
         <div className="relative overflow-hidden rounded-lg border border-white/15 bg-[#080710] p-8 text-center text-white shadow-strong sm:p-12">
-          <img src="/visuals/purple-desert.jpg" alt="" className="absolute inset-0 h-full w-full object-cover opacity-[0.38]" />
+          <img src="/visuals/purple-desert.jpg" alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-[0.38]" />
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,7,16,0.92),rgba(8,7,16,0.70),rgba(8,7,16,0.92))]" />
           <div className="relative z-10">
             <h2 className="mb-4 text-3xl font-black sm:text-4xl">¿Listo para empezar?</h2>
@@ -137,7 +137,7 @@ export default function HowItWorksPage() {
                 Explorar servicios
                 <ArrowRight className="h-4 w-4" strokeWidth={1.9} />
               </Link>
-              <Link href="/" className="inline-flex items-center justify-center rounded-lg border border-white/22 bg-white/10 px-8 py-3 font-bold text-white backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:bg-white/16">
+              <Link href="/" className="inline-flex items-center justify-center rounded-lg border border-white/22 bg-white/20 px-8 py-3 font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-white/30">
                 Crear cuenta gratis
               </Link>
             </div>

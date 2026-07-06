@@ -72,12 +72,14 @@ export default function CTASection() {
               <img
                 src="/visuals/purple-desert.jpg"
                 alt=""
+                loading="lazy"
+                decoding="async"
                 className="absolute inset-0 h-full w-full object-cover opacity-[0.42]"
               />
               <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,7,16,0.90),rgba(8,7,16,0.68),rgba(8,7,16,0.90))]" />
               <div className="absolute inset-0 noise-overlay opacity-50" />
               <div className="relative z-10 mx-auto max-w-3xl">
-                <span className="inline-flex rounded-lg border border-white/18 bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-white/74 backdrop-blur-xl">
+                <span className="inline-flex rounded-lg border border-white/18 bg-white/20 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-white/74">
                   Nuevo proyecto, mejor equipo
                 </span>
                 <h2 className="mt-5 text-3xl font-black sm:text-4xl">¿Listo para empezar?</h2>
@@ -91,7 +93,7 @@ export default function CTASection() {
                   </Link>
                   <Link
                     href="/how-it-works"
-                    className="inline-flex items-center justify-center rounded-lg border border-white/22 bg-white/10 px-8 py-3 font-bold text-white backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:bg-white/16"
+                    className="inline-flex items-center justify-center rounded-lg border border-white/22 bg-white/20 px-8 py-3 font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-white/30"
                   >
                     Cómo funciona
                   </Link>

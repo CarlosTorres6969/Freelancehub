@@ -31,8 +31,8 @@ export default function MessagesPage() {
 
       if (data) {
         setConversations(data)
-        if (data.length > 0 && !selected) {
-          setSelected(data[0].id)
+        if (data.length > 0) {
+          setSelected((prev) => prev ?? data[0].id)
         }
 
         const allIds = data.flatMap((c) => c.participant_ids)
@@ -52,7 +52,7 @@ export default function MessagesPage() {
     }
 
     loadConversations()
-  }, [user])
+  }, [user, supabase])
 
   useEffect(() => {
     if (!selected) return
@@ -87,7 +87,7 @@ export default function MessagesPage() {
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
-  }, [selected])
+  }, [selected, supabase])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })

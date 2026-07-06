@@ -88,15 +88,27 @@ export interface Message {
   created_at: string
 }
 
+export type OrderStatus =
+  | "pending"
+  | "in_progress"
+  | "delivered"
+  | "completed"
+  | "cancelled"
+  | "disputed"
+
 export interface Order {
   id: string
   service_id: string
   buyer_id: string
   freelancer_id: string
-  status: "pending" | "in_progress" | "completed" | "cancelled"
+  status: OrderStatus
   price: number
   service_fee: number
   total: number
+  requirements: string | null
+  delivery_note: string | null
+  delivered_at: string | null
+  dispute_reason: string | null
   created_at: string
   updated_at: string
   service?: Service

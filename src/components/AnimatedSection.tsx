@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { m, useReducedMotion, type Variants } from "motion/react"
 
 type RevealType = "up" | "left" | "right" | "scale"
 
@@ -12,6 +12,25 @@ interface AnimatedSectionProps {
   once?: boolean
 }
 
+const variantsByType: Record<RevealType, Variants> = {
+  up: {
+    hidden: { opacity: 0, y: 28 },
+    visible: { opacity: 1, y: 0 },
+  },
+  left: {
+    hidden: { opacity: 0, x: -28 },
+    visible: { opacity: 1, x: 0 },
+  },
+  right: {
+    hidden: { opacity: 0, x: 28 },
+    visible: { opacity: 1, x: 0 },
+  },
+  scale: {
+    hidden: { opacity: 0, scale: 0.92 },
+    visible: { opacity: 1, scale: 1 },
+  },
+}
+
 export default function AnimatedSection({
   children,
   className = "",
@@ -19,46 +38,22 @@ export default function AnimatedSection({
   delay = 0,
   once = true,
 }: AnimatedSectionProps) {
-  const ref = useRef<HTMLDivElement>(null)
-  const [visible, setVisible] = useState(false)
+  const reducedMotion = useReducedMotion()
 
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          if (delay) {
-            setTimeout(() => setVisible(true), delay)
-          } else {
-            setVisible(true)
-          }
-          if (once) observer.unobserve(el)
-        } else if (!once) {
-          setVisible(false)
-        }
-      },
-      { threshold: 0.05, rootMargin: "30px" }
-    )
-
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [delay, once])
-
-  const revealClass =
-    type === "up" ? "reveal" :
-    type === "left" ? "reveal-left" :
-    type === "right" ? "reveal-right" :
-    "reveal-scale"
+  if (reducedMotion) {
+    return <div className={className}>{children}</div>
+  }
 
   return (
-    <div
-      ref={ref}
-      className={`${revealClass} ${visible ? "visible" : ""} ${className}`}
-      style={{ transitionDelay: delay ? `${delay}ms` : "0ms", willChange: visible ? "transform, opacity" : "auto" }}
+    <m.div
+      className={className}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once, amount: 0.1 }}
+      variants={variantsByType[type]}
+      transition={{ duration: 0.55, delay: delay / 1000, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
-    </div>
+    </m.div>
   )
 }

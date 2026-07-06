@@ -47,7 +47,7 @@ export default function PortfolioSection({ freelancerId, editable = false }: Por
         setItems(data ?? [])
         setLoading(false)
       })
-  }, [targetId])
+  }, [targetId, supabase])
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]

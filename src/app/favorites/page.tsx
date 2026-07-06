@@ -29,7 +29,7 @@ export default function FavoritesPage() {
         if (data) setServices(data)
         setLoading(false)
       })
-  }, [user, favorites])
+  }, [user, favorites, supabase])
 
   if (loading) {
     return (

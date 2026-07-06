@@ -3,8 +3,31 @@ import Link from "next/link"
 import { FolderOpen } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import ServiceCard from "@/components/ServiceCard"
+import type { Metadata } from "next"
 
 export const revalidate = 60
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const { slug } = await params
+  const supabase = await createClient()
+  const { data: category } = await supabase
+    .from("categories")
+    .select("name, description")
+    .eq("slug", slug)
+    .single()
+
+  if (!category) return { title: "Categoría no encontrada" }
+
+  return {
+    title: category.name,
+    description: category.description?.slice(0, 160),
+    openGraph: { title: category.name, description: category.description?.slice(0, 160), type: "website" },
+  }
+}
 
 export default async function CategoryPage({
   params,

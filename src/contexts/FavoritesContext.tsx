@@ -31,7 +31,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
       .then(({ data }) => {
         if (data) setFavorites(data.map((f) => f.service_id))
       })
-  }, [user])
+  }, [user, supabase])
 
   const toggleFavorite = useCallback(async (serviceId: string) => {
     if (!user) return
@@ -51,7 +51,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
         .insert({ user_id: user.id, service_id: serviceId })
       if (!error) setFavorites((prev) => [...prev, serviceId])
     }
-  }, [user, favorites])
+  }, [user, favorites, supabase])
 
   const isFavorite = useCallback(
     (serviceId: string) => favorites.includes(serviceId),

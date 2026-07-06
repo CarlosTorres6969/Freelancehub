@@ -35,15 +35,13 @@ function CheckoutContent() {
       setCommissionRate(rate)
       setLoading(false)
     })
-  }, [serviceId])
+  }, [serviceId, supabase])
 
   async function handleConfirm() {
     if (!user || !service) return
     setStep(2)
     const formData = new FormData()
     formData.set("serviceId", service.id)
-    formData.set("price", String(service.price))
-    formData.set("freelancerId", service.freelancer_id)
     try {
       await createOrder(formData)
       setTimeout(() => setStep(3), 1500)

@@ -48,20 +48,20 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
-  }, [user])
+  }, [user, supabase])
 
   const unreadCount = notifications.filter((n) => !n.read).length
 
   const markAsRead = useCallback(async (id: string) => {
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)))
     await supabase.from("notifications").update({ read: true }).eq("id", id)
-  }, [])
+  }, [supabase])
 
   const markAllAsRead = useCallback(async () => {
     if (!user) return
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
     await supabase.from("notifications").update({ read: true }).eq("user_id", user.id).is("read", false)
-  }, [user])
+  }, [user, supabase])
 
   return (
     <NotificationContext.Provider value={{ notifications, unreadCount, markAsRead, markAllAsRead }}>
