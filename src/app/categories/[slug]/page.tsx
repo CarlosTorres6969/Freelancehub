@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { FolderOpen } from "lucide-react"
-import { createClient } from "@/lib/supabase/server"
+import { getCategoryBySlug, getServices } from "@/lib/repositories/public"
 import ServiceCard from "@/components/ServiceCard"
 import type { Metadata } from "next"
 
@@ -13,12 +13,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const { slug } = await params
-  const supabase = await createClient()
-  const { data: category } = await supabase
-    .from("categories")
-    .select("name, description")
-    .eq("slug", slug)
-    .single()
+  const category = await getCategoryBySlug(slug)
 
   if (!category) return { title: "Categoría no encontrada" }
 
@@ -35,22 +30,11 @@ export default async function CategoryPage({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
-  const supabase = await createClient()
-
-  const { data: category } = await supabase
-    .from("categories")
-    .select("*")
-    .eq("slug", slug)
-    .single()
+  const category = await getCategoryBySlug(slug)
 
   if (!category) notFound()
 
-  const { data: categoryServices } = await supabase
-    .from("services")
-    .select("*, category:categories(*)")
-    .eq("category_id", category.id)
-    .eq("active", true)
-    .order("created_at", { ascending: false })
+  const categoryServices = await getServices(category.id)
 
   return (
     <div className="page-shell">

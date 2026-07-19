@@ -1,23 +1,3 @@
 "use server"
-
-import { createClient } from "@/lib/supabase/server"
-
-export async function submitContact(formData: FormData) {
-  const supabase = await createClient()
-  const name = ((formData.get("name") as string) ?? "").trim()
-  const email = ((formData.get("email") as string) ?? "").trim()
-  const subject = ((formData.get("subject") as string) ?? "").trim()
-  const message = ((formData.get("message") as string) ?? "").trim()
-
-  if (!name || !email || !message) throw new Error("Completa los campos requeridos")
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Correo electrónico inválido")
-  if (name.length > 200 || subject.length > 300 || message.length > 5000) {
-    throw new Error("El contenido excede el tamaño permitido")
-  }
-
-  const { error } = await supabase.from("contact_messages").insert({
-    name, email, subject, message,
-  })
-
-  if (error) throw new Error(error.message)
-}
+import { getPool,sql } from "@/lib/db"
+export async function submitContact(formData:FormData){const name=String(formData.get("name")??"").trim(),email=String(formData.get("email")??"").trim(),subject=String(formData.get("subject")??"").trim(),message=String(formData.get("message")??"").trim();if(!name||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||!message)throw new Error("Datos inválidos");await(await getPool()).request().input("name",sql.NVarChar(150),name.slice(0,150)).input("email",sql.NVarChar(320),email.slice(0,320)).input("subject",sql.NVarChar(200),subject.slice(0,200)).input("message",sql.NVarChar(sql.MAX),message.slice(0,5000)).query(`INSERT dbo.contact_messages(name,email,subject,message) VALUES(@name,@email,@subject,@message)`)}

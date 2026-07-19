@@ -1,13 +1,11 @@
 "use client"
 
 import { useRef, useState } from "react"
-import { createClient } from "@/lib/supabase/client"
 import { useAuth } from "@/contexts/AuthContext"
 import Image from "next/image"
 
 export default function AvatarUpload() {
   const { user, profile, refreshProfile } = useAuth()
-  const supabase = createClient()
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState("")
@@ -32,22 +30,13 @@ export default function AvatarUpload() {
     setError("")
     setUploading(true)
 
-    const ext = file.name.split(".").pop()
-    const path = `${user.id}/avatar.${ext}`
-
-    const { error: uploadError } = await supabase.storage
-      .from("avatars")
-      .upload(path, file, { upsert: true })
-
-    if (uploadError) {
-      setError(uploadError.message)
+    const data=new FormData();data.set("file",file);const response=await fetch("/api/me/avatar",{method:"POST",body:data})
+    if (!response.ok) {
+      const result=await response.json();setError(result.error||"No se pudo subir")
       setUploading(false)
       return
     }
 
-    const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path)
-
-    await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", user.id)
     await refreshProfile()
     setUploading(false)
   }

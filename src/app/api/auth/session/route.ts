@@ -1,0 +1,4 @@
+import { NextResponse } from "next/server"
+import { getSessionUser } from "@/lib/auth/session"
+import { getPool,sql } from "@/lib/db"
+export async function GET(){const user=await getSessionUser();if(!user)return NextResponse.json({user:null,profile:null});const r=await(await getPool()).request().input("id",sql.UniqueIdentifier,user.id).query(`SELECT p.*,u.email,(SELECT skill FROM dbo.profile_skills WHERE profile_id=p.id FOR JSON PATH) skill_rows,(SELECT language FROM dbo.profile_languages WHERE profile_id=p.id FOR JSON PATH) language_rows FROM dbo.profiles p JOIN dbo.users u ON u.id=p.id WHERE p.id=@id`);const profile=r.recordset[0]??null;if(profile){profile.skills=JSON.parse(profile.skill_rows||"[]").map((x:{skill:string})=>x.skill);profile.languages=JSON.parse(profile.language_rows||"[]").map((x:{language:string})=>x.language);delete profile.skill_rows;delete profile.language_rows}return NextResponse.json({user,profile})}

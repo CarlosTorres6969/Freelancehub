@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { createClient } from "@/lib/supabase/client"
 import AnimatedSection from "./AnimatedSection"
 import TiltCard from "./TiltCard"
 import {
@@ -37,17 +36,9 @@ const categoriesMap: Record<string, CategoryInfo> = {
 
 export default function Categories() {
   const [categories, setCategories] = useState<Category[]>([])
-  const supabase = createClient()
-
   useEffect(() => {
-    supabase
-      .from("categories")
-      .select("*")
-      .order("name")
-      .then(({ data }) => {
-        if (data) setCategories(data)
-      })
-  }, [supabase])
+    fetch("/api/public/home").then(r=>r.json()).then(data=>setCategories(data.categories??[]))
+  }, [])
 
   return (
     <section className="relative overflow-hidden border-y border-card-border bg-background/72 py-20 sm:py-24">

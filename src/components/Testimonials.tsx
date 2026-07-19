@@ -2,24 +2,15 @@
 
 import { useEffect, useState } from "react"
 import { Quote, Star } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
 import AnimatedSection from "./AnimatedSection"
 import TiltCard from "./TiltCard"
 import type { Testimonial } from "@/types"
 
 export default function Testimonials() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([])
-  const supabase = createClient()
-
   useEffect(() => {
-    supabase
-      .from("testimonials")
-      .select("*")
-      .order("created_at")
-      .then(({ data }) => {
-        if (data) setTestimonials(data)
-      })
-  }, [supabase])
+    fetch("/api/public/home").then(r=>r.json()).then(data=>setTestimonials(data.testimonials??[]))
+  }, [])
 
   return (
     <section className="mesh-surface py-20 sm:py-24">

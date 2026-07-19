@@ -4,7 +4,6 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
 import { useAuth } from "@/contexts/AuthContext"
 import ServiceForm from "@/components/ServiceForm"
 import type { Service } from "@/types"
@@ -13,7 +12,6 @@ export default function EditServicePage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
   const { user, loading } = useAuth()
-  const supabase = createClient()
   const [service, setService] = useState<Service | null>(null)
   const [fetching, setFetching] = useState(true)
 
@@ -23,17 +21,11 @@ export default function EditServicePage() {
       router.replace("/?auth=login")
       return
     }
-    supabase
-      .from("services")
-      .select("*")
-      .eq("id", params.id)
-      .eq("freelancer_id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
+    fetch(`/api/me/service/${params.id}`,{cache:"no-store"}).then(r=>r.ok?r.json():null).then((data) => {
         setService(data)
         setFetching(false)
       })
-  }, [loading, user, params.id, supabase, router])
+  }, [loading, user, params.id, router])
 
   if (loading || fetching) {
     return (

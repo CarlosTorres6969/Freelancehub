@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+import { getReviewsByService, getServiceById, getServices } from "@/lib/repositories/public"
 import ServiceCard from "@/components/ServiceCard"
 import ImageGallery from "@/components/ImageGallery"
 import ReviewForm from "@/components/ReviewForm"
@@ -17,12 +17,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>
 }): Promise<Metadata> {
   const { id } = await params
-  const supabase = await createClient()
-  const { data: service } = await supabase
-    .from("services")
-    .select("title, description, images")
-    .eq("id", id)
-    .single()
+  const service = await getServiceById(id)
 
   if (!service) return { title: "Servicio no encontrado" }
 
@@ -44,29 +39,12 @@ export default async function ServiceDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const supabase = await createClient()
-
-  const { data: service } = await supabase
-    .from("services")
-    .select("*, category:categories(*), freelancer:profiles!services_freelancer_id_fkey(*)")
-    .eq("id", id)
-    .single()
+  const service = await getServiceById(id)
 
   if (!service) notFound()
 
-  const { data: serviceReviews } = await supabase
-    .from("reviews")
-    .select("*")
-    .eq("service_id", id)
-    .order("created_at", { ascending: false })
-
-  const { data: relatedServices } = await supabase
-    .from("services")
-    .select("*, category:categories(*)")
-    .eq("category_id", service.category_id)
-    .neq("id", service.id)
-    .eq("active", true)
-    .limit(3)
+  const [serviceReviews, allRelated] = await Promise.all([getReviewsByService(id),getServices(service.category_id)])
+  const relatedServices = allRelated.filter(item=>item.id!==service.id).slice(0,3)
 
   return (
     <div className="page-shell">

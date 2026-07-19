@@ -1,0 +1,3 @@
+import "server-only"
+import { BlobServiceClient } from "@azure/storage-blob"
+export async function uploadImage(file:File,path:string){const connection=process.env.AZURE_STORAGE_CONNECTION_STRING,containerName=process.env.AZURE_STORAGE_CONTAINER||"freelancehub";if(!connection)throw new Error("Azure Blob Storage no está configurado");if(!file.type.startsWith("image/")||file.size>5*1024*1024)throw new Error("Imagen inválida o mayor de 5 MB");const service=BlobServiceClient.fromConnectionString(connection),container=service.getContainerClient(containerName);await container.createIfNotExists({access:"blob"});const blob=container.getBlockBlobClient(path);await blob.uploadData(Buffer.from(await file.arrayBuffer()),{blobHTTPHeaders:{blobContentType:file.type}});return blob.url}

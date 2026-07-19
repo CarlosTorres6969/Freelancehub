@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { CheckCircle2, CircleDollarSign, Layers3, PackageCheck, Pencil, Plus, Zap } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
 import { useAuth } from "@/contexts/AuthContext"
 import AnimatedSection from "@/components/AnimatedSection"
 import OrderActions from "@/components/OrderActions"
@@ -36,34 +35,15 @@ export default function DashboardPage() {
   const [myServices, setMyServices] = useState<Service[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
 
   useEffect(() => {
     if (!user) { setLoading(false); return }
-    const userId = user.id
-
     async function load() {
-      const [ordersRes, servicesRes, categoriesRes] = await Promise.all([
-        supabase
-          .from("orders")
-          .select("*, service:services(*)")
-          .or(`buyer_id.eq.${userId},freelancer_id.eq.${userId}`)
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("services")
-          .select("*, category:categories(*)")
-          .eq("freelancer_id", userId)
-          .order("created_at", { ascending: false }),
-        supabase.from("categories").select("*").order("name"),
-      ])
-
-      if (ordersRes.data) setOrders(ordersRes.data)
-      if (servicesRes.data) setMyServices(servicesRes.data)
-      if (categoriesRes.data) setCategories(categoriesRes.data)
+      const response=await fetch("/api/me/dashboard",{cache:"no-store"}),data=await response.json();if(response.ok){setOrders(data.orders);setMyServices(data.services);setCategories(data.categories)}
       setLoading(false)
     }
     load()
-  }, [user, supabase])
+  }, [user])
 
   async function handleToggleActive(service: Service) {
     const next = !service.active

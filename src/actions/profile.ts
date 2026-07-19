@@ -1,41 +1,5 @@
 "use server"
-
-import { createClient } from "@/lib/supabase/server"
-
-export async function updateProfile(formData: FormData) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error("No autenticado")
-
-  const updates: Record<string, unknown> = {}
-
-  const fields = ["name", "title", "description", "bio", "location"]
-  for (const field of fields) {
-    const value = formData.get(field)
-    if (value) updates[field] = value
-  }
-
-  const hourlyRate = formData.get("hourly_rate")
-  if (hourlyRate) {
-    const rate = parseFloat(hourlyRate as string)
-    if (Number.isNaN(rate) || rate < 0 || rate > 100000) throw new Error("Tarifa por hora inválida")
-    updates.hourly_rate = rate
-  }
-
-  const skills = formData.get("skills")
-  if (skills) {
-    updates.skills = (skills as string).split(",").map((s) => s.trim())
-  }
-
-  const languages = formData.get("languages")
-  if (languages) {
-    updates.languages = (languages as string).split(",").map((s) => s.trim())
-  }
-
-  const { error } = await supabase
-    .from("profiles")
-    .update(updates)
-    .eq("id", user.id)
-
-  if (error) throw new Error(error.message)
-}
+import { requireUser } from "@/lib/auth/guards"
+import { getPool,sql } from "@/lib/db"
+import { parseCommaList } from "@/lib/validation"
+export async function updateProfile(formData:FormData){const user=await requireUser(),pool=await getPool(),tx=new sql.Transaction(pool);const name=String(formData.get("name")??"").trim(),title=String(formData.get("title")??"").trim(),description=String(formData.get("description")??"").trim(),bio=String(formData.get("bio")??"").trim(),location=String(formData.get("location")??"").trim(),rateRaw=String(formData.get("hourly_rate")??"").trim(),rate=rateRaw?Number(rateRaw):null,skills=parseCommaList(formData.get("skills")),languages=parseCommaList(formData.get("languages"));if(!name||name.length>150||rate!==null&&(!Number.isFinite(rate)||rate<0||rate>100000))throw new Error("Perfil inválido");await tx.begin();try{await new sql.Request(tx).input("id",sql.UniqueIdentifier,user.id).input("name",sql.NVarChar(150),name).input("title",sql.NVarChar(150),title||null).input("description",sql.NVarChar(1000),description||null).input("bio",sql.NVarChar(sql.MAX),bio||null).input("location",sql.NVarChar(200),location||null).input("rate",sql.Decimal(12,2),rate).query(`UPDATE dbo.profiles SET name=@name,title=@title,description=@description,bio=@bio,location=@location,hourly_rate=@rate,updated_at=SYSUTCDATETIME() WHERE id=@id;DELETE dbo.profile_skills WHERE profile_id=@id;DELETE dbo.profile_languages WHERE profile_id=@id`);for(const skill of skills)await new sql.Request(tx).input("id",sql.UniqueIdentifier,user.id).input("value",sql.NVarChar(100),skill).query(`INSERT dbo.profile_skills(profile_id,skill) VALUES(@id,@value)`);for(const language of languages)await new sql.Request(tx).input("id",sql.UniqueIdentifier,user.id).input("value",sql.NVarChar(100),language).query(`INSERT dbo.profile_languages(profile_id,language) VALUES(@id,@value)`);await tx.commit()}catch(e){await tx.rollback().catch(()=>{});throw e}}

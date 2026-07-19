@@ -2,18 +2,17 @@
 
 import { useState } from "react"
 import { Star } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
+import { addReview } from "@/actions/reviews"
 import { useAuth } from "@/contexts/AuthContext"
 import { useToast } from "@/contexts/ToastContext"
 
 export default function ReviewForm({ serviceId, onSubmitted }: { serviceId: string; onSubmitted?: () => void }) {
-  const { user, profile } = useAuth()
+  const { user } = useAuth()
   const { addToast } = useToast()
   const [rating, setRating] = useState(0)
   const [hover, setHover] = useState(0)
   const [comment, setComment] = useState("")
   const [submitting, setSubmitting] = useState(false)
-  const supabase = createClient()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -35,35 +34,11 @@ export default function ReviewForm({ serviceId, onSubmitted }: { serviceId: stri
 
     setSubmitting(true)
 
-    const userName = profile?.name ?? user.email?.split("@")[0] ?? "Usuario"
-    const userAvatar = userName.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
-
-    const { error } = await supabase.from("reviews").insert({
-      service_id: serviceId,
-      user_id: user.id,
-      user_name: userName,
-      user_avatar: userAvatar,
-      rating,
-      content: comment.trim(),
-    })
-
-    if (error) {
+    try { const data=new FormData();data.set("serviceId",serviceId);data.set("rating",String(rating));data.set("content",comment.trim());await addReview(data)
+    } catch {
       addToast("Error al enviar la reseña", "error")
       setSubmitting(false)
       return
-    }
-
-    const { data: stats } = await supabase
-      .from("reviews")
-      .select("rating")
-      .eq("service_id", serviceId)
-
-    if (stats) {
-      const avg = stats.reduce((a: number, r: { rating: number }) => a + r.rating, 0) / stats.length
-      await supabase
-        .from("services")
-        .update({ rating: Math.round(avg * 100) / 100, reviews_count: stats.length })
-        .eq("id", serviceId)
     }
 
     addToast("Reseña enviada con éxito", "success")

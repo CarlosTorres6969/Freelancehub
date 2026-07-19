@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useEffect } from "react"
 import { Search, SearchX, SlidersHorizontal, XCircle } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
 import ServiceCard from "@/components/ServiceCard"
 import AnimatedSection from "@/components/AnimatedSection"
 import type { Service, Category } from "@/types"
@@ -19,8 +18,6 @@ export default function MarketplacePage() {
   const [ratingFilter, setRatingFilter] = useState("")
   const [loading, setLoading] = useState(true)
 
-  const supabase = createClient()
-
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const categoryFromUrl = params.get("category")
@@ -29,16 +26,13 @@ export default function MarketplacePage() {
 
   useEffect(() => {
     async function load() {
-      const [servicesRes, categoriesRes] = await Promise.all([
-        supabase.from("services").select("*, category:categories(*)").eq("active", true).order("created_at", { ascending: false }),
-        supabase.from("categories").select("*").order("name"),
-      ])
-      if (servicesRes.data) setServices(servicesRes.data)
-      if (categoriesRes.data) setCategories(categoriesRes.data)
+      const response = await fetch("/api/public/catalog")
+      const data = await response.json()
+      if (response.ok) { setServices(data.services); setCategories(data.categories) }
       setLoading(false)
     }
     load()
-  }, [supabase])
+  }, [])
 
   const filteredServices = useMemo(() => {
     let result = [...services]

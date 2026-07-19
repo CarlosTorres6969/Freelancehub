@@ -3,7 +3,6 @@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { Heart } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
 import { useAuth } from "@/contexts/AuthContext"
 import { useFavorites } from "@/contexts/FavoritesContext"
 import AnimatedSection from "@/components/AnimatedSection"
@@ -15,21 +14,16 @@ export default function FavoritesPage() {
   const { favorites } = useFavorites()
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
 
   useEffect(() => {
     if (!user) { setLoading(false); return }
     if (favorites.length === 0) { setServices([]); setLoading(false); return }
 
-    supabase
-      .from("services")
-      .select("*, category:categories(*)")
-      .in("id", favorites)
-      .then(({ data }) => {
-        if (data) setServices(data)
+    fetch("/api/public/catalog").then(r=>r.json()).then(({services:data}) => {
+        if (data) setServices(data.filter((s:Service)=>favorites.includes(s.id)))
         setLoading(false)
       })
-  }, [user, favorites, supabase])
+  }, [user, favorites])
 
   if (loading) {
     return (

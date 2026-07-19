@@ -3,31 +3,22 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ArrowRight, BarChart3, Briefcase, ShieldCheck, Sparkles, Star, Users } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
 
 export default function Hero() {
   const [stats, setStats] = useState({ projects: "0+", freelancers: "0+", rating: "4.8", satisfaction: "98%" })
-  const supabase = createClient()
-
   useEffect(() => {
     async function loadStats() {
-      const [{ count: projects }, { count: freelancers }, { data: ratingData }] = await Promise.all([
-        supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "completed"),
-        supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "freelancer"),
-        supabase.from("services").select("rating"),
-      ])
-      const avgRating = ratingData && ratingData.length > 0
-        ? (ratingData.reduce((sum, s) => sum + s.rating, 0) / ratingData.length).toFixed(1)
-        : "4.8"
+      const response=await fetch("/api/public/home"), data=await response.json()
+      const publicStats=data.stats??{projects:0,freelancers:0,rating:4.8}
       setStats({
-        projects: `${projects ?? 0}+`,
-        freelancers: `${freelancers ?? 0}+`,
-        rating: avgRating,
+        projects: `${publicStats.projects}+`,
+        freelancers: `${publicStats.freelancers}+`,
+        rating: Number(publicStats.rating).toFixed(1),
         satisfaction: "98%",
       })
     }
     loadStats()
-  }, [supabase])
+  }, [])
 
   const statItems = [
     { value: stats.projects, label: "Proyectos completados", icon: Briefcase },

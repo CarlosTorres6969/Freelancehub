@@ -1,31 +1,4 @@
 "use server"
-
-import { createClient } from "@/lib/supabase/server"
-
-export async function toggleFavorite(serviceId: string) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error("No autenticado")
-
-  const existing = await supabase
-    .from("favorites")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("service_id", serviceId)
-    .maybeSingle()
-
-  if (existing.data) {
-    const { error } = await supabase
-      .from("favorites")
-      .delete()
-      .eq("id", existing.data.id)
-    if (error) throw new Error(error.message)
-    return false
-  } else {
-    const { error } = await supabase
-      .from("favorites")
-      .insert({ user_id: user.id, service_id: serviceId })
-    if (error) throw new Error(error.message)
-    return true
-  }
-}
+import { requireUser } from "@/lib/auth/guards"
+import { getPool,sql } from "@/lib/db"
+export async function toggleFavorite(serviceId:string){const user=await requireUser(),pool=await getPool(),tx=new sql.Transaction(pool);await tx.begin();try{const q=new sql.Request(tx).input("user",sql.UniqueIdentifier,user.id).input("service",sql.UniqueIdentifier,serviceId);const found=await q.query(`SELECT id FROM dbo.favorites WITH(UPDLOCK,HOLDLOCK) WHERE user_id=@user AND service_id=@service`);if(found.recordset[0])await new sql.Request(tx).input("id",sql.UniqueIdentifier,found.recordset[0].id).query(`DELETE dbo.favorites WHERE id=@id`);else await new sql.Request(tx).input("user",sql.UniqueIdentifier,user.id).input("service",sql.UniqueIdentifier,serviceId).query(`INSERT dbo.favorites(user_id,service_id) VALUES(@user,@service)`);await tx.commit();return!found.recordset[0]}catch(e){await tx.rollback().catch(()=>{});throw e}}

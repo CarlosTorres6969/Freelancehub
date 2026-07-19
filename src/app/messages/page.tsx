@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react"
 import { MessageCircle, Search, Send } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
 import { useAuth } from "@/contexts/AuthContext"
 import AnimatedSection from "@/components/AnimatedSection"
 import type { Conversation, Message, Profile } from "@/types"
@@ -16,78 +15,22 @@ export default function MessagesPage() {
   const [input, setInput] = useState("")
   const [participants, setParticipants] = useState<Record<string, Profile>>({})
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const supabase = createClient()
 
   useEffect(() => {
     if (!user) return
-    const userId = user.id
-
     async function loadConversations() {
-      const { data } = await supabase
-        .from("conversations")
-        .select("*")
-        .contains("participant_ids", [userId])
-        .order("last_message_time", { ascending: false, nullsFirst: false })
-
-      if (data) {
-        setConversations(data)
-        if (data.length > 0) {
-          setSelected((prev) => prev ?? data[0].id)
-        }
-
-        const allIds = data.flatMap((c) => c.participant_ids)
-        const uniqueIds = [...new Set(allIds.filter((id) => id !== userId))]
-        if (uniqueIds.length > 0) {
-          const { data: profiles } = await supabase
-            .from("profiles")
-            .select("*")
-            .in("id", uniqueIds)
-          if (profiles) {
-            const map: Record<string, Profile> = {}
-            profiles.forEach((p) => { map[p.id] = p })
-            setParticipants(map)
-          }
-        }
-      }
+      const response=await fetch("/api/me/messages",{cache:"no-store"}),data=await response.json()
+      if(response.ok){setConversations(data.conversations);setParticipants(data.participants);if(data.conversations.length)setSelected(prev=>prev??data.conversations[0].id)}
     }
 
     loadConversations()
-  }, [user, supabase])
+  }, [user])
 
   useEffect(() => {
     if (!selected) return
 
-    supabase
-      .from("messages")
-      .select("*")
-      .eq("conversation_id", selected)
-      .order("created_at", { ascending: true })
-      .then(({ data }) => {
-        if (data) setMessages(data)
-      })
-
-    const channel = supabase
-      .channel(`messages:${selected}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `conversation_id=eq.${selected}`,
-        },
-        (payload) => {
-          const newMsg = payload.new as Message
-          setMessages((prev) => {
-            if (prev.some((m) => m.id === newMsg.id)) return prev
-            return [...prev, newMsg]
-          })
-        }
-      )
-      .subscribe()
-
-    return () => { supabase.removeChannel(channel) }
-  }, [selected, supabase])
+    const load=()=>fetch(`/api/me/messages?conversationId=${selected}`,{cache:"no-store"}).then(r=>r.json()).then(data=>setMessages(data.messages??[]));load();const timer=setInterval(load,5000);return()=>clearInterval(timer)
+  }, [selected])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -96,20 +39,7 @@ export default function MessagesPage() {
   async function handleSend() {
     if (!input.trim() || !user || !selected) return
 
-    const { error } = await supabase.from("messages").insert({
-      conversation_id: selected,
-      sender_id: user.id,
-      content: input.trim(),
-    })
-
-    if (!error) {
-      await supabase
-        .from("conversations")
-        .update({ last_message: input.trim(), last_message_time: new Date().toISOString() })
-        .eq("id", selected)
-
-      setInput("")
-    }
+    const response=await fetch("/api/me/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({conversationId:selected,content:input.trim()})});if(response.ok)setInput("")
   }
 
   if (!user) {

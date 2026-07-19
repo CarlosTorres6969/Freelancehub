@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next"
-import { createClient } from "@/lib/supabase/server"
+import { getPool } from "@/lib/db"
 import { SITE_URL } from "@/lib/site"
 
 export const revalidate = 3600
@@ -20,27 +20,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }))
 
   try {
-    const supabase = await createClient()
-    const [{ data: services }, { data: categories }, { data: freelancers }] = await Promise.all([
-      supabase.from("services").select("id, created_at").eq("active", true).limit(1000),
-      supabase.from("categories").select("slug"),
-      supabase.from("profiles").select("id").eq("role", "freelancer").limit(1000),
+    const pool = await getPool()
+    const [servicesResult,categoriesResult,freelancersResult] = await Promise.all([
+      pool.request().query(`SELECT TOP(1000) id,created_at FROM dbo.services WHERE active=1`),
+      pool.request().query(`SELECT slug FROM dbo.categories`),
+      pool.request().query(`SELECT TOP(1000) id FROM dbo.profiles WHERE role='freelancer'`),
     ])
+    const services=servicesResult.recordset,categories=categoriesResult.recordset,freelancers=freelancersResult.recordset
 
-    const serviceRoutes: MetadataRoute.Sitemap = (services ?? []).map((s) => ({
+    const serviceRoutes: MetadataRoute.Sitemap = services.map((s) => ({
       url: `${SITE_URL}/services/${s.id}`,
       lastModified: s.created_at ? new Date(s.created_at) : new Date(),
       changeFrequency: "weekly",
       priority: 0.8,
     }))
 
-    const categoryRoutes: MetadataRoute.Sitemap = (categories ?? []).map((c) => ({
+    const categoryRoutes: MetadataRoute.Sitemap = categories.map((c) => ({
       url: `${SITE_URL}/categories/${c.slug}`,
       changeFrequency: "weekly",
       priority: 0.6,
     }))
 
-    const freelancerRoutes: MetadataRoute.Sitemap = (freelancers ?? []).map((f) => ({
+    const freelancerRoutes: MetadataRoute.Sitemap = freelancers.map((f) => ({
       url: `${SITE_URL}/freelancers/${f.id}`,
       changeFrequency: "weekly",
       priority: 0.5,

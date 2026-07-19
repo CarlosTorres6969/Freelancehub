@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { X } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
-import OnboardingModal from "./OnboardingModal"
 
 export type AuthMode = "login" | "register"
 
@@ -22,8 +20,6 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [successMsg, setSuccessMsg] = useState("")
-  const [showOnboarding, setShowOnboarding] = useState(false)
-  const supabase = createClient()
 
   useEffect(() => {
     if (isOpen) {
@@ -32,11 +28,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
     }
   }, [isOpen, initialMode])
 
-  if (!isOpen && !showOnboarding) return null
-
-  if (showOnboarding) {
-    return <OnboardingModal onComplete={() => setShowOnboarding(false)} />
-  }
+  if (!isOpen) return null
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -55,30 +47,21 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
           return
         }
 
-        const { error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
-          },
-        })
-
-        if (signUpError) {
-          setError(signUpError.message || "Error al crear la cuenta")
+        const response = await fetch("/api/auth/register", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({email,password}) })
+        const result = await response.json()
+        if (!response.ok) {
+          setError(result.error || "Error al crear la cuenta")
           return
         }
-        setShowOnboarding(true)
-        onClose()
+        window.location.reload()
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
-
-        if (signInError) {
-          setError(signInError.message || signInError.status?.toString() || "Credenciales incorrectas")
+        const response = await fetch("/api/auth/login", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({email,password}) })
+        const result = await response.json()
+        if (!response.ok) {
+          setError(result.error || "Credenciales incorrectas")
           return
         }
+        window.location.reload()
         onClose()
       }
     } catch (err: unknown) {
@@ -96,13 +79,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
   }
 
   async function handleOAuth(provider: "google" | "apple") {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    })
-    if (error) setError(error.message)
+    setError(`El acceso con ${provider} todavía no está configurado.`)
   }
 
   return (

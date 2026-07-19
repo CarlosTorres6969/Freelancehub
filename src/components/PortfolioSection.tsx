@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
-import { createClient } from "@/lib/supabase/client"
 import { useAuth } from "@/contexts/AuthContext"
 
 interface PortfolioItem {
@@ -21,7 +20,6 @@ interface PortfolioSectionProps {
 
 export default function PortfolioSection({ freelancerId, editable = false }: PortfolioSectionProps) {
   const { user } = useAuth()
-  const supabase = createClient()
   const targetId = freelancerId ?? user?.id
 
   const [items, setItems] = useState<PortfolioItem[]>([])
@@ -38,16 +36,11 @@ export default function PortfolioSection({ freelancerId, editable = false }: Por
 
   useEffect(() => {
     if (!targetId) { setLoading(false); return }
-    supabase
-      .from("portfolio_items")
-      .select("*")
-      .eq("freelancer_id", targetId)
-      .order("created_at", { ascending: false })
-      .then(({ data }) => {
+    fetch(`/api/portfolio?freelancerId=${targetId}`).then(r=>r.json()).then((data) => {
         setItems(data ?? [])
         setLoading(false)
       })
-  }, [targetId, supabase])
+  }, [targetId])
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]
@@ -66,24 +59,7 @@ export default function PortfolioSection({ freelancerId, editable = false }: Por
     setUploading(true)
     setError("")
 
-    const ext = file.name.split(".").pop()
-    const path = `${user.id}/${Date.now()}.${ext}`
-
-    const { error: upErr } = await supabase.storage
-      .from("services")
-      .upload(path, file, { upsert: false })
-
-    if (upErr) { setError(upErr.message); setUploading(false); return }
-
-    const { data: { publicUrl } } = supabase.storage.from("services").getPublicUrl(path)
-
-    const { data, error: insertErr } = await supabase
-      .from("portfolio_items")
-      .insert({ freelancer_id: user.id, title, description: description || null, image_url: publicUrl, url: url || null })
-      .select()
-      .single()
-
-    if (insertErr) { setError(insertErr.message); setUploading(false); return }
+    const form=new FormData();form.set("file",file);form.set("title",title);form.set("description",description);form.set("url",url);const response=await fetch("/api/portfolio",{method:"POST",body:form}),data=await response.json();if(!response.ok){setError(data.error||"No se pudo guardar");setUploading(false);return}
 
     setItems(prev => [data, ...prev])
     setTitle(""); setDescription(""); setUrl(""); setFile(null); setPreview(null)
@@ -92,7 +68,7 @@ export default function PortfolioSection({ freelancerId, editable = false }: Por
   }
 
   async function handleDelete(id: string) {
-    await supabase.from("portfolio_items").delete().eq("id", id)
+    await fetch(`/api/portfolio?id=${id}`,{method:"DELETE"})
     setItems(prev => prev.filter(i => i.id !== id))
   }
 

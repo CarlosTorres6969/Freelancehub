@@ -1,103 +1,11 @@
 "use server"
-
-import { createClient } from "@/lib/supabase/server"
-
-async function requireAdmin() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error("No autenticado")
-  const { data: profile } = await supabase
-    .from("profiles").select("role").eq("id", user.id).single()
-  if (profile?.role !== "admin") throw new Error("Acceso denegado")
-  return supabase
-}
-
-export async function getAdminStats() {
-  const supabase = await requireAdmin()
-
-  const [
-    { count: totalUsers },
-    { count: totalFreelancers },
-    { count: totalServices },
-    { count: totalOrders },
-    { data: ordersData },
-    { data: recentOrders },
-  ] = await Promise.all([
-    supabase.from("profiles").select("*", { count: "exact", head: true }),
-    supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "freelancer"),
-    supabase.from("services").select("*", { count: "exact", head: true }).eq("active", true),
-    supabase.from("orders").select("*", { count: "exact", head: true }),
-    supabase.from("orders").select("total, service_fee, status, created_at"),
-    supabase.from("orders")
-      .select("*, service:services(title), buyer:profiles!orders_buyer_id_fkey(name), freelancer:profiles!orders_freelancer_id_fkey(name)")
-      .order("created_at", { ascending: false })
-      .limit(10),
-  ])
-
-  const completedOrders = ordersData?.filter(o => o.status === "completed") ?? []
-  const totalRevenue = completedOrders.reduce((s, o) => s + o.total, 0)
-  const totalFees = completedOrders.reduce((s, o) => s + o.service_fee, 0)
-
-  return {
-    totalUsers: totalUsers ?? 0,
-    totalFreelancers: totalFreelancers ?? 0,
-    totalServices: totalServices ?? 0,
-    totalOrders: totalOrders ?? 0,
-    totalRevenue,
-    totalFees,
-    recentOrders: recentOrders ?? [],
-    ordersData: ordersData ?? [],
-  }
-}
-
-export async function getAdminUsers() {
-  const supabase = await requireAdmin()
-  const { data } = await supabase
-    .from("profiles")
-    .select("*")
-    .order("created_at", { ascending: false })
-  return data ?? []
-}
-
-export async function getAdminServices() {
-  const supabase = await requireAdmin()
-  const { data } = await supabase
-    .from("services")
-    .select("*, category:categories(name), freelancer:profiles!services_freelancer_id_fkey(name, email)")
-    .order("created_at", { ascending: false })
-  return data ?? []
-}
-
-export async function updateUserRole(userId: string, role: "client" | "freelancer" | "admin") {
-  const supabase = await requireAdmin()
-  const { error } = await supabase
-    .from("profiles").update({ role }).eq("id", userId)
-  if (error) throw new Error(error.message)
-}
-
-export async function toggleServiceActive(serviceId: string, active: boolean) {
-  const supabase = await requireAdmin()
-  const { error } = await supabase
-    .from("services").update({ active }).eq("id", serviceId)
-  if (error) throw new Error(error.message)
-}
-
-export async function getCommissionRate(): Promise<number> {
-  const supabase = await createClient()
-  const { data } = await supabase
-    .from("platform_settings")
-    .select("value")
-    .eq("key", "commission_rate")
-    .single()
-  return data ? parseFloat(data.value) : 0.05
-}
-
-export async function updateCommissionRate(rate: number) {
-  const supabase = await requireAdmin()
-  if (rate < 0 || rate > 0.5) throw new Error("La comisión debe estar entre 0% y 50%")
-  const { error } = await supabase
-    .from("platform_settings")
-    .update({ value: rate.toString(), updated_at: new Date().toISOString() })
-    .eq("key", "commission_rate")
-  if (error) throw new Error(error.message)
-}
+import { requireRole } from "@/lib/auth/guards"
+import { getPool,sql } from "@/lib/db"
+async function admin(){await requireRole(["admin"]);return getPool()}
+export async function getAdminStats(){const p=await admin(),r=await p.request().query(`SELECT(SELECT COUNT(*)FROM dbo.profiles)totalUsers,(SELECT COUNT(*)FROM dbo.profiles WHERE role='freelancer')totalFreelancers,(SELECT COUNT(*)FROM dbo.services WHERE active=1)totalServices,(SELECT COUNT(*)FROM dbo.[orders])totalOrders;SELECT total,service_fee,status,created_at FROM dbo.[orders];SELECT TOP(10)o.*,s.title service_title,b.name buyer_name,f.name freelancer_name FROM dbo.[orders]o JOIN dbo.services s ON s.id=o.service_id JOIN dbo.profiles b ON b.id=o.buyer_id JOIN dbo.profiles f ON f.id=o.freelancer_id ORDER BY o.created_at DESC`),sets=r.recordsets as unknown as Array<Array<Record<string,unknown>>>,head=sets[0][0],ordersData=sets[1].map(o=>({total:Number(o.total),service_fee:Number(o.service_fee),status:String(o.status),created_at:o.created_at})),recentOrders=sets[2].map(o=>({...o,total:Number(o.total),service_fee:Number(o.service_fee),service:{title:String(o.service_title)},buyer:{name:String(o.buyer_name)},freelancer:{name:String(o.freelancer_name)}})),completed=ordersData.filter(o=>o.status==="completed");return{totalUsers:Number(head.totalUsers),totalFreelancers:Number(head.totalFreelancers),totalServices:Number(head.totalServices),totalOrders:Number(head.totalOrders),totalRevenue:completed.reduce((n,o)=>n+o.total,0),totalFees:completed.reduce((n,o)=>n+o.service_fee,0),ordersData,recentOrders}}
+export async function getAdminUsers(){return(await(await admin()).request().query(`SELECT p.*,u.email FROM dbo.profiles p JOIN dbo.users u ON u.id=p.id ORDER BY p.created_at DESC`)).recordset.map(p=>({...p,skills:[],languages:[]}))}
+export async function getAdminServices(){return(await(await admin()).request().query(`SELECT s.*,c.name category_name,p.name freelancer_name,u.email freelancer_email FROM dbo.services s JOIN dbo.categories c ON c.id=s.category_id JOIN dbo.profiles p ON p.id=s.freelancer_id JOIN dbo.users u ON u.id=p.id ORDER BY s.created_at DESC`)).recordset.map(s=>({...s,price:Number(s.price),category:{name:s.category_name},freelancer:{name:s.freelancer_name,email:s.freelancer_email},images:[],tags:[]}))}
+export async function updateUserRole(id:string,role:"client"|"freelancer"|"admin"){await(await admin()).request().input("id",sql.UniqueIdentifier,id).input("role",sql.VarChar(20),role).query(`UPDATE dbo.profiles SET role=@role,updated_at=SYSUTCDATETIME() WHERE id=@id`)}
+export async function toggleServiceActive(id:string,active:boolean){await(await admin()).request().input("id",sql.UniqueIdentifier,id).input("active",sql.Bit,active).query(`UPDATE dbo.services SET active=@active,updated_at=SYSUTCDATETIME() WHERE id=@id`)}
+export async function getCommissionRate(){const r=await(await getPool()).request().query(`SELECT value FROM dbo.platform_settings WHERE[key]='commission_rate'`);return Number(r.recordset[0]?.value??.05)}
+export async function updateCommissionRate(rate:number){if(rate<0||rate>.5)throw new Error("Comisión inválida");await(await admin()).request().input("value",sql.NVarChar(500),String(rate)).query(`UPDATE dbo.platform_settings SET value=@value,updated_at=SYSUTCDATETIME() WHERE[key]='commission_rate'`)}

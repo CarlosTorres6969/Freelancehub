@@ -4,7 +4,6 @@ import { Suspense, useState, useEffect } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { BadgeCheck, Clock3, Wrench } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
 import { useAuth } from "@/contexts/AuthContext"
 import { createOrder } from "@/actions/orders"
 import { getCommissionRate } from "@/actions/admin"
@@ -17,25 +16,20 @@ function CheckoutContent() {
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [loading, setLoading] = useState(true)
   const [commissionRate, setCommissionRate] = useState(0.05)
-  const supabase = createClient()
 
   const serviceId = searchParams.get("serviceId")
 
   useEffect(() => {
     if (!serviceId) { setLoading(false); return }
     Promise.all([
-      supabase
-        .from("services")
-        .select("*, freelancer:profiles!services_freelancer_id_fkey(*), category:categories(*)")
-        .eq("id", serviceId)
-        .single(),
+      fetch("/api/public/catalog").then(r=>r.json()).then(d=>({data:d.services.find((s:Service)=>s.id===serviceId)})),
       getCommissionRate(),
     ]).then(([{ data }, rate]) => {
       setService(data)
       setCommissionRate(rate)
       setLoading(false)
     })
-  }, [serviceId, supabase])
+  }, [serviceId])
 
   async function handleConfirm() {
     if (!user || !service) return

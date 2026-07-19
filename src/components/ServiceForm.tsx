@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/contexts/ToastContext"
 import { createService, updateService } from "@/actions/services"
 import type { Category, Service } from "@/types"
@@ -14,7 +13,6 @@ interface ServiceFormProps {
 export default function ServiceForm({ service }: ServiceFormProps) {
   const router = useRouter()
   const { addToast } = useToast()
-  const supabase = createClient()
   const [categories, setCategories] = useState<Category[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
@@ -22,10 +20,8 @@ export default function ServiceForm({ service }: ServiceFormProps) {
   const isEdit = Boolean(service)
 
   useEffect(() => {
-    supabase.from("categories").select("*").order("name").then(({ data }) => {
-      if (data) setCategories(data)
-    })
-  }, [supabase])
+    fetch("/api/public/catalog").then(r=>r.json()).then(data=>setCategories(data.categories??[]))
+  }, [])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()

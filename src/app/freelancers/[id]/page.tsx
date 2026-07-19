@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { createClient } from "@/lib/supabase/server"
+import { getPublicFreelancer, getServicesByFreelancer } from "@/lib/repositories/public"
 import ServiceCard from "@/components/ServiceCard"
 import type { Metadata } from "next"
 
@@ -12,12 +12,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>
 }): Promise<Metadata> {
   const { id } = await params
-  const supabase = await createClient()
-  const { data: freelancer } = await supabase
-    .from("profiles")
-    .select("name, title, description")
-    .eq("id", id)
-    .single()
+  const freelancer = await getPublicFreelancer(id)
 
   if (!freelancer) return { title: "Freelancer no encontrado" }
 
@@ -35,22 +30,11 @@ export default async function FreelancerProfilePage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const supabase = await createClient()
-
-  const { data: freelancer } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", id)
-    .single()
+  const freelancer = await getPublicFreelancer(id)
 
   if (!freelancer) notFound()
 
-  const { data: freelancerServices } = await supabase
-    .from("services")
-    .select("*, category:categories(*)")
-    .eq("freelancer_id", id)
-    .eq("active", true)
-    .order("created_at", { ascending: false })
+  const freelancerServices = await getServicesByFreelancer(id)
 
   const initials = freelancer.name
     .split(" ")

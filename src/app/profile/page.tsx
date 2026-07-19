@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { updateProfile } from "@/actions/profile"
 import { useAuth } from "@/contexts/AuthContext"
 import AnimatedSection from "@/components/AnimatedSection"
 import AvatarUpload from "@/components/AvatarUpload"
@@ -21,7 +21,6 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState("")
-  const supabase = createClient()
 
   useEffect(() => {
     if (profile) {
@@ -39,7 +38,7 @@ export default function ProfilePage() {
   async function handleRoleChange(newRole: "client" | "freelancer") {
     if (!user) return
     setChangingRole(true)
-    await supabase.from("profiles").update({ role: newRole }).eq("id", user.id)
+    await fetch("/api/me/role",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({role:newRole})})
     await refreshProfile()
     setRole(newRole)
     setChangingRole(false)
@@ -51,26 +50,11 @@ export default function ProfilePage() {
     setError("")
     setSaved(false)
 
-    const { error: err } = await supabase
-      .from("profiles")
-      .update({
-        name,
-        title,
-        description,
-        bio,
-        location,
-        skills: skills.split(",").map((s) => s.trim()).filter(Boolean),
-        languages: languages.split(",").map((l) => l.trim()).filter(Boolean),
-      })
-      .eq("id", user.id)
-
-    if (err) {
-      setError(err.message)
-    } else {
+    try {const data=new FormData();Object.entries({name,title,description,bio,location,skills,languages}).forEach(([k,v])=>data.set(k,v));await updateProfile(data)
       setSaved(true)
-      refreshProfile()
+      await refreshProfile()
       setTimeout(() => setSaved(false), 3000)
-    }
+    }catch(e){setError(e instanceof Error?e.message:"No se pudo guardar")}
     setLoading(false)
   }
 

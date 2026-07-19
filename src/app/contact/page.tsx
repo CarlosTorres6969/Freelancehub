@@ -2,13 +2,11 @@
 
 import { useState } from "react"
 import { Clock, Mail, MapPin, Phone, Send } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
 import AnimatedSection from "@/components/AnimatedSection"
 import { useToast } from "@/contexts/ToastContext"
 
 export default function ContactPage() {
   const { addToast } = useToast()
-  const supabase = createClient()
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" })
   const [sending, setSending] = useState(false)
 
@@ -20,14 +18,8 @@ export default function ContactPage() {
     }
 
     setSending(true)
-    const { error } = await supabase.from("contact_messages").insert({
-      name: form.name,
-      email: form.email,
-      subject: form.subject,
-      message: form.message,
-    })
-
-    if (error) {
+    const response = await fetch("/api/public/contact", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(form)})
+    if (!response.ok) {
       addToast("Error al enviar el mensaje. Intenta de nuevo.", "error")
     } else {
       addToast("Mensaje enviado con éxito. Te responderemos pronto.", "success")

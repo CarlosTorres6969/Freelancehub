@@ -1,90 +1,10 @@
 "use server"
-
 import { revalidatePath } from "next/cache"
-import { createClient } from "@/lib/supabase/server"
+import { requireRole } from "@/lib/auth/guards"
+import { getPool,sql } from "@/lib/db"
 import { validateServiceInput } from "@/lib/validation"
-
-type ServerClient = Awaited<ReturnType<typeof createClient>>
-
-async function requirePublisher(): Promise<{ supabase: ServerClient; userId: string }> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error("No autenticado")
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (profile?.role !== "freelancer" && profile?.role !== "admin") {
-    throw new Error("Necesitas una cuenta de freelancer para publicar servicios")
-  }
-
-  return { supabase, userId: user.id }
-}
-
-function readForm(formData: FormData) {
-  return {
-    title: formData.get("title"),
-    description: formData.get("description"),
-    long_description: formData.get("long_description"),
-    category_id: formData.get("category_id"),
-    price: formData.get("price"),
-    delivery_time: formData.get("delivery_time"),
-    tags: formData.get("tags"),
-    images: formData.get("images"),
-  }
-}
-
-export async function createService(formData: FormData): Promise<string> {
-  const { supabase, userId } = await requirePublisher()
-  const values = validateServiceInput(readForm(formData))
-
-  const { data, error } = await supabase
-    .from("services")
-    .insert({ ...values, freelancer_id: userId })
-    .select("id")
-    .single()
-
-  if (error) throw new Error(error.message)
-
-  revalidatePath("/marketplace")
-  revalidatePath("/dashboard")
-  return data.id
-}
-
-export async function updateService(serviceId: string, formData: FormData): Promise<void> {
-  if (!serviceId) throw new Error("Servicio inválido")
-  const { supabase, userId } = await requirePublisher()
-  const values = validateServiceInput(readForm(formData))
-
-  // El filtro por freelancer_id evita editar servicios ajenos aunque RLS ya lo impida.
-  const { error } = await supabase
-    .from("services")
-    .update(values)
-    .eq("id", serviceId)
-    .eq("freelancer_id", userId)
-
-  if (error) throw new Error(error.message)
-
-  revalidatePath("/marketplace")
-  revalidatePath("/dashboard")
-  revalidatePath(`/services/${serviceId}`)
-}
-
-export async function setServiceActive(serviceId: string, active: boolean): Promise<void> {
-  if (!serviceId) throw new Error("Servicio inválido")
-  const { supabase, userId } = await requirePublisher()
-
-  const { error } = await supabase
-    .from("services")
-    .update({ active })
-    .eq("id", serviceId)
-    .eq("freelancer_id", userId)
-
-  if (error) throw new Error(error.message)
-
-  revalidatePath("/marketplace")
-  revalidatePath("/dashboard")
-}
+function readForm(f:FormData){return{title:f.get("title"),description:f.get("description"),long_description:f.get("long_description"),category_id:f.get("category_id"),price:f.get("price"),delivery_time:f.get("delivery_time"),tags:f.get("tags"),images:f.get("images")}}
+async function replaceLists(tx:sql.Transaction,id:string,tags:string[],images:string[]){await new sql.Request(tx).input("id",sql.UniqueIdentifier,id).query(`DELETE dbo.service_tags WHERE service_id=@id;DELETE dbo.service_images WHERE service_id=@id`);for(const tag of tags)await new sql.Request(tx).input("id",sql.UniqueIdentifier,id).input("tag",sql.NVarChar(80),tag).query(`INSERT dbo.service_tags(service_id,tag) VALUES(@id,@tag)`);for(let i=0;i<images.length;i++)await new sql.Request(tx).input("id",sql.UniqueIdentifier,id).input("url",sql.NVarChar(2048),images[i]).input("sort",sql.SmallInt,i).query(`INSERT dbo.service_images(service_id,image_url,sort_order) VALUES(@id,@url,@sort)`)}
+export async function createService(formData:FormData){const{user}=await requireRole(["freelancer","admin"]),v=validateServiceInput(readForm(formData)),pool=await getPool(),tx=new sql.Transaction(pool),id=crypto.randomUUID();await tx.begin();try{await new sql.Request(tx).input("id",sql.UniqueIdentifier,id).input("title",sql.NVarChar(100),v.title).input("description",sql.NVarChar(300),v.description).input("long",sql.NVarChar(sql.MAX),v.long_description).input("category",sql.UniqueIdentifier,v.category_id).input("freelancer",sql.UniqueIdentifier,user.id).input("price",sql.Decimal(12,2),v.price).input("delivery",sql.NVarChar(100),v.delivery_time).query(`INSERT dbo.services(id,title,description,long_description,category_id,freelancer_id,price,delivery_time) VALUES(@id,@title,@description,@long,@category,@freelancer,@price,@delivery)`);await replaceLists(tx,id,v.tags,v.images);await tx.commit();revalidatePath("/marketplace");revalidatePath("/dashboard");return id}catch(e){await tx.rollback().catch(()=>{});throw e}}
+export async function updateService(id:string,formData:FormData){const{user,role}=await requireRole(["freelancer","admin"]),v=validateServiceInput(readForm(formData)),pool=await getPool(),tx=new sql.Transaction(pool);await tx.begin();try{const r=await new sql.Request(tx).input("id",sql.UniqueIdentifier,id).input("user",sql.UniqueIdentifier,user.id).input("isAdmin",sql.Bit,role==="admin").input("title",sql.NVarChar(100),v.title).input("description",sql.NVarChar(300),v.description).input("long",sql.NVarChar(sql.MAX),v.long_description).input("category",sql.UniqueIdentifier,v.category_id).input("price",sql.Decimal(12,2),v.price).input("delivery",sql.NVarChar(100),v.delivery_time).query(`UPDATE dbo.services SET title=@title,description=@description,long_description=@long,category_id=@category,price=@price,delivery_time=@delivery,updated_at=SYSUTCDATETIME() WHERE id=@id AND(freelancer_id=@user OR @isAdmin=1);SELECT @@ROWCOUNT affected`);if(!r.recordset[0].affected)throw new Error("Servicio no encontrado");await replaceLists(tx,id,v.tags,v.images);await tx.commit();revalidatePath("/marketplace");revalidatePath(`/services/${id}`)}catch(e){await tx.rollback().catch(()=>{});throw e}}
+export async function setServiceActive(id:string,active:boolean){const{user,role}=await requireRole(["freelancer","admin"]);await(await getPool()).request().input("id",sql.UniqueIdentifier,id).input("user",sql.UniqueIdentifier,user.id).input("admin",sql.Bit,role==="admin").input("active",sql.Bit,active).query(`UPDATE dbo.services SET active=@active,updated_at=SYSUTCDATETIME() WHERE id=@id AND(freelancer_id=@user OR @admin=1)`);revalidatePath("/marketplace");revalidatePath("/dashboard")}
