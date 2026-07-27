@@ -18,13 +18,13 @@ import NotificationBell from "./NotificationBell"
 import ThemeToggle from "./ThemeToggle"
 import { useFavorites } from "@/contexts/FavoritesContext"
 
-const navLinks = [
+const navLinksBefore = [
   { href: "/", label: "Inicio" },
   { href: "/marketplace", label: "Marketplace" },
   { href: "/how-it-works", label: "Cómo Funciona" },
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/messages", label: "Mensajes" },
 ]
+const dashboardLink = { href: "/dashboard", label: "Dashboard" }
+const navLinksAfter = [{ href: "/messages", label: "Mensajes" }]
 
 export default function Navbar() {
   const { user, profile, signOut, loading } = useAuth()
@@ -34,6 +34,10 @@ export default function Navbar() {
   const [profileOpen, setProfileOpen] = useState(false)
   const { favorites } = useFavorites()
   const profileRef = useRef<HTMLDivElement>(null)
+  const canAccessDashboard = !!profile
+  const navLinks = canAccessDashboard
+    ? [...navLinksBefore, dashboardLink, ...navLinksAfter]
+    : [...navLinksBefore, ...navLinksAfter]
 
   // El middleware redirige rutas protegidas a "/?auth=login" — aquí se consume
   // ese parámetro para abrir el modal correspondiente.
@@ -90,19 +94,21 @@ export default function Navbar() {
 
             <div className="hidden md:flex items-center gap-1">
               <ThemeToggle />
-              <Link
-                href="/favorites"
-                className="icon-btn-3d relative rounded-lg p-2 text-muted-fg hover:bg-accent hover:text-foreground"
-                aria-label="Favoritos"
-              >
-                <Heart className="h-5 w-5" strokeWidth={1.8} />
-                {favorites.length > 0 && (
-                  <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
-                    {favorites.length}
-                  </span>
-                )}
-              </Link>
-              <NotificationBell />
+              {user && (
+                <Link
+                  href="/favorites"
+                  className="icon-btn-3d relative rounded-lg p-2 text-muted-fg hover:bg-accent hover:text-foreground"
+                  aria-label="Favoritos"
+                >
+                  <Heart className="h-5 w-5" strokeWidth={1.8} />
+                  {favorites.length > 0 && (
+                    <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
+                      {favorites.length}
+                    </span>
+                  )}
+                </Link>
+              )}
+              {user && <NotificationBell />}
 
               {user ? (
                 <div className="relative" ref={profileRef}>
@@ -129,14 +135,16 @@ export default function Navbar() {
                           <User className="h-4 w-4" strokeWidth={1.8} />
                           Mi Perfil
                         </Link>
-                        <Link
-                          href="/dashboard"
-                          onClick={() => setProfileOpen(false)}
-                          className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-foreground transition-colors hover:bg-accent"
-                        >
-                          <LayoutDashboard className="h-4 w-4" strokeWidth={1.8} />
-                          Dashboard
-                        </Link>
+                        {canAccessDashboard && (
+                          <Link
+                            href="/dashboard"
+                            onClick={() => setProfileOpen(false)}
+                            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-foreground transition-colors hover:bg-accent"
+                          >
+                            <LayoutDashboard className="h-4 w-4" strokeWidth={1.8} />
+                            Dashboard
+                          </Link>
+                        )}
                         {profile?.role === "admin" && (
                           <Link
                             href="/admin"
@@ -198,7 +206,9 @@ export default function Navbar() {
                     {link.label}
                   </Link>
                 ))}
-                <Link href="/favorites" className="block rounded-md px-3 py-2 text-sm font-medium text-muted-fg hover:bg-accent hover:text-foreground" onClick={() => setMenuOpen(false)}>Favoritos</Link>
+                {user && (
+                  <Link href="/favorites" className="block rounded-md px-3 py-2 text-sm font-medium text-muted-fg hover:bg-accent hover:text-foreground" onClick={() => setMenuOpen(false)}>Favoritos</Link>
+                )}
                 <Link href="/profile" className="block rounded-md px-3 py-2 text-sm font-medium text-muted-fg hover:bg-accent hover:text-foreground" onClick={() => setMenuOpen(false)}>Perfil</Link>
                 <Link href="/contact" className="block rounded-md px-3 py-2 text-sm font-medium text-muted-fg hover:bg-accent hover:text-foreground" onClick={() => setMenuOpen(false)}>Contacto</Link>
               </div>

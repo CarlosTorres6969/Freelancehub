@@ -8,28 +8,12 @@ import AnimatedSection from "@/components/AnimatedSection"
 import OrderActions from "@/components/OrderActions"
 import { setServiceActive } from "@/actions/services"
 import { IncomeChart, ProjectsChart, CategoryChart } from "@/components/Charts"
+import ClientDashboard from "@/components/ClientDashboard"
+import { statusStyles, statusLabels } from "@/lib/orderStatus"
 import type { Order, Service, Category } from "@/types"
 
-const statusStyles: Record<string, string> = {
-  completed: "bg-emerald-500/12 text-emerald-600 dark:text-emerald-300",
-  in_progress: "bg-cyan-500/12 text-cyan-600 dark:text-cyan-300",
-  delivered: "bg-violet-500/12 text-violet-600 dark:text-violet-300",
-  pending: "bg-amber-500/14 text-amber-700 dark:text-amber-300",
-  cancelled: "bg-rose-500/12 text-rose-600 dark:text-rose-300",
-  disputed: "bg-orange-500/14 text-orange-700 dark:text-orange-300",
-}
-
-const statusLabels: Record<string, string> = {
-  completed: "Completado",
-  in_progress: "En progreso",
-  delivered: "Entregado",
-  pending: "Pendiente",
-  cancelled: "Cancelado",
-  disputed: "En disputa",
-}
-
 export default function DashboardPage() {
-  const { user, profile } = useAuth()
+  const { user, profile, loading: authLoading } = useAuth()
   const [activeTab, setActiveTab] = useState("overview")
   const [orders, setOrders] = useState<Order[]>([])
   const [myServices, setMyServices] = useState<Service[]>([])
@@ -37,13 +21,14 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (authLoading) return
     if (!user) { setLoading(false); return }
     async function load() {
       const response=await fetch("/api/me/dashboard",{cache:"no-store"}),data=await response.json();if(response.ok){setOrders(data.orders);setMyServices(data.services);setCategories(data.categories)}
       setLoading(false)
     }
     load()
-  }, [user])
+  }, [user, profile, authLoading])
 
   async function handleToggleActive(service: Service) {
     const next = !service.active
@@ -70,6 +55,11 @@ export default function DashboardPage() {
         </div>
       </div>
     )
+  }
+
+  if (profile?.role === "client") {
+    const myOrders = orders.filter((o) => o.buyer_id === user?.id)
+    return <ClientDashboard profile={profile} orders={myOrders} categories={categories} />
   }
 
   const totalEarnings = orders

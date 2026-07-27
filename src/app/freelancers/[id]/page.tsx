@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { getPublicFreelancer, getServicesByFreelancer } from "@/lib/repositories/public"
 import ServiceCard from "@/components/ServiceCard"
+import ContactFreelancerButton from "@/components/ContactFreelancerButton"
 import type { Metadata } from "next"
 
 export const revalidate = 60
@@ -99,6 +100,10 @@ export default async function FreelancerProfilePage({
                   <div className="text-muted-fg">Proyectos</div>
                 </div>
               </div>
+            </div>
+
+            <div className="mt-4 max-w-xs">
+              <ContactFreelancerButton freelancerId={freelancer.id} />
             </div>
 
             <p className="mt-4 text-muted-fg leading-relaxed">{freelancer.bio}</p>

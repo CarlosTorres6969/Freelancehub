@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Bell, MessageCircle, Package, Star } from "lucide-react"
 import { useNotifications } from "@/contexts/NotificationContext"
 
@@ -23,6 +24,13 @@ export default function NotificationBell() {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const router = useRouter()
+
+  const handleNotificationClick = (notification: (typeof notifications)[number]) => {
+    markAsRead(notification.id)
+    setOpen(false)
+    if (notification.type === "message") router.push("/messages")
+  }
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -63,7 +71,7 @@ export default function NotificationBell() {
               return (
                 <button
                   key={notification.id}
-                  onClick={() => markAsRead(notification.id)}
+                  onClick={() => handleNotificationClick(notification)}
                   className={`flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-accent ${!notification.read ? "bg-accent/80" : ""}`}
                 >
                   <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-violet-500 to-cyan-400 text-white">

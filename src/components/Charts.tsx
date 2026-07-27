@@ -81,13 +81,13 @@ function useChartColors() {
   return colors
 }
 
-export function IncomeChart({ orders }: { orders: Order[] }) {
+export function IncomeChart({ orders, title = "Ingresos Mensuales", label = "Ingresos" }: { orders: Order[]; title?: string; label?: string }) {
   const { cardBorder } = useChartColors()
   const data = useMemo(() => ({
     labels: monthLabels(6),
     datasets: [
       {
-        label: "Ingresos",
+        label,
         data: groupRevenueByMonth(orders, 6),
         borderColor: "#7657f5",
         backgroundColor: "rgba(118, 87, 245, 0.13)",
@@ -96,11 +96,11 @@ export function IncomeChart({ orders }: { orders: Order[] }) {
         pointBackgroundColor: "#4ad9f2",
       },
     ],
-  }), [orders])
+  }), [orders, label])
 
   return (
     <div className="neo-card rounded-lg p-5">
-      <h3 className="text-sm font-bold text-foreground mb-4">Ingresos Mensuales</h3>
+      <h3 className="text-sm font-bold text-foreground mb-4">{title}</h3>
       <Line data={data} options={{
         responsive: true,
         plugins: { legend: { display: false } },
@@ -113,23 +113,23 @@ export function IncomeChart({ orders }: { orders: Order[] }) {
   )
 }
 
-export function ProjectsChart({ orders }: { orders: Order[] }) {
+export function ProjectsChart({ orders, title = "Proyectos por Mes", label = "Proyectos" }: { orders: Order[]; title?: string; label?: string }) {
   const { cardBorder } = useChartColors()
   const data = useMemo(() => ({
     labels: monthLabels(6),
     datasets: [
       {
-        label: "Proyectos",
+        label,
         data: groupByMonth(orders, 6),
         backgroundColor: "rgba(118, 87, 245, 0.72)",
         borderRadius: 6,
       },
     ],
-  }), [orders])
+  }), [orders, label])
 
   return (
     <div className="neo-card rounded-lg p-5">
-      <h3 className="text-sm font-bold text-foreground mb-4">Proyectos por Mes</h3>
+      <h3 className="text-sm font-bold text-foreground mb-4">{title}</h3>
       <Bar data={data} options={{
         responsive: true,
         plugins: { legend: { display: false } },

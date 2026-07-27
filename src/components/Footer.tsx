@@ -1,7 +1,12 @@
+"use client"
+
 import Link from "next/link"
 import { Briefcase, Globe2, MessageCircle, Rocket } from "lucide-react"
+import { useAuth } from "@/contexts/AuthContext"
 
 export default function Footer() {
+  const { profile } = useAuth()
+  const canAccessDashboard = !!profile
   return (
     <footer className="mt-auto border-t border-card-border bg-card-bg/70">
       <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
@@ -30,10 +35,12 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="mb-3 font-bold text-foreground">Para Freelancers</h3>
+            <h3 className="mb-3 font-bold text-foreground">Mi Cuenta</h3>
             <ul className="space-y-2 text-sm text-muted-fg">
               <li><Link href="/how-it-works" className="hover:text-foreground transition-colors">Cómo funciona</Link></li>
-              <li><Link href="/dashboard" className="hover:text-foreground transition-colors">Dashboard</Link></li>
+              {canAccessDashboard && (
+                <li><Link href="/dashboard" className="hover:text-foreground transition-colors">Dashboard</Link></li>
+              )}
               <li><Link href="/profile" className="hover:text-foreground transition-colors">Mi Perfil</Link></li>
               <li><Link href="/messages" className="hover:text-foreground transition-colors">Mensajes</Link></li>
             </ul>

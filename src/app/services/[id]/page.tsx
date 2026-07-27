@@ -7,6 +7,7 @@ import ReviewForm from "@/components/ReviewForm"
 import TrackRecentlyViewed from "@/components/TrackRecentlyViewed"
 import RecentlyViewed from "@/components/RecentlyViewed"
 import AddToFavorites from "@/components/AddToFavorites"
+import ContactFreelancerButton from "@/components/ContactFreelancerButton"
 import type { Metadata } from "next"
 
 export const revalidate = 60
@@ -222,9 +223,7 @@ export default async function ServiceDetailPage({
             >
               Contratar Servicio
             </Link>
-            <button className="btn-secondary w-full py-3 text-sm">
-              Enviar Mensaje
-            </button>
+            <ContactFreelancerButton freelancerId={service.freelancer_id} />
           </div>
         </div>
       </div>

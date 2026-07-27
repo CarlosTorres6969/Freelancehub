@@ -1,45 +1,62 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { Suspense, useState, useEffect, useCallback } from "react"
+import { useSearchParams } from "next/navigation"
 import { MessageCircle, Search, Send } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import AnimatedSection from "@/components/AnimatedSection"
 import type { Conversation, Message, Profile } from "@/types"
 
-export default function MessagesPage() {
+function MessagesContent() {
   const { user } = useAuth()
+  const searchParams = useSearchParams()
+  const conversationIdParam = searchParams.get("conversationId")
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [messages, setMessages] = useState<Message[]>([])
   const [selected, setSelected] = useState<string | null>(null)
   const [search, setSearch] = useState("")
   const [input, setInput] = useState("")
   const [participants, setParticipants] = useState<Record<string, Profile>>({})
-  const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!user) return
     async function loadConversations() {
       const response=await fetch("/api/me/messages",{cache:"no-store"}),data=await response.json()
-      if(response.ok){setConversations(data.conversations);setParticipants(data.participants);if(data.conversations.length)setSelected(prev=>prev??data.conversations[0].id)}
+      if(response.ok){
+        setConversations(data.conversations)
+        setParticipants(data.participants)
+        if(conversationIdParam && data.conversations.some((c:Conversation)=>c.id===conversationIdParam)) setSelected(conversationIdParam)
+        else if(data.conversations.length) setSelected(prev=>prev??data.conversations[0].id)
+      }
     }
 
     loadConversations()
-  }, [user])
+  }, [user, conversationIdParam])
 
-  useEffect(() => {
+  const loadMessages = useCallback(() => {
     if (!selected) return
-
-    const load=()=>fetch(`/api/me/messages?conversationId=${selected}`,{cache:"no-store"}).then(r=>r.json()).then(data=>setMessages(data.messages??[]));load();const timer=setInterval(load,5000);return()=>clearInterval(timer)
+    fetch(`/api/me/messages?conversationId=${selected}`,{cache:"no-store"}).then(r=>r.json()).then(data=>{
+      const next: Message[] = data.messages ?? []
+      setMessages(prev => {
+        if (prev.length === next.length && prev.every((m, i) => m.id === next[i].id)) return prev
+        return next
+      })
+    })
   }, [selected])
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages])
+    if (!selected) return
+    loadMessages()
+    const timer = setInterval(loadMessages, 5000)
+    return () => clearInterval(timer)
+  }, [selected, loadMessages])
 
   async function handleSend() {
     if (!input.trim() || !user || !selected) return
 
-    const response=await fetch("/api/me/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({conversationId:selected,content:input.trim()})});if(response.ok)setInput("")
+    const content = input.trim()
+    const response=await fetch("/api/me/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({conversationId:selected,content})})
+    if(response.ok){setInput("");loadMessages()}
   }
 
   if (!user) {
@@ -146,7 +163,6 @@ export default function MessagesPage() {
                     </div>
                   )
                 })}
-                <div ref={messagesEndRef} />
               </div>
               <div className="border-t border-card-border p-4">
                 <div className="flex gap-2">
@@ -177,5 +193,13 @@ export default function MessagesPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={<div className="mx-auto max-w-6xl px-4 py-10" />}>
+      <MessagesContent />
+    </Suspense>
   )
 }

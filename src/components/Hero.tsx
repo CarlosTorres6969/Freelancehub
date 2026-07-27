@@ -2,19 +2,20 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { ArrowRight, BarChart3, Briefcase, ShieldCheck, Sparkles, Star, Users } from "lucide-react"
+import { ArrowRight, BarChart3, Briefcase, Sparkles, Users } from "lucide-react"
+import { useAuth } from "@/contexts/AuthContext"
 
 export default function Hero() {
-  const [stats, setStats] = useState({ projects: "0+", freelancers: "0+", rating: "4.8", satisfaction: "98%" })
+  const { profile } = useAuth()
+  const canAccessDashboard = !!profile
+  const [stats, setStats] = useState({ projects: "0+", freelancers: "0+" })
   useEffect(() => {
     async function loadStats() {
       const response=await fetch("/api/public/home"), data=await response.json()
-      const publicStats=data.stats??{projects:0,freelancers:0,rating:4.8}
+      const publicStats=data.stats??{projects:0,freelancers:0}
       setStats({
         projects: `${publicStats.projects}+`,
         freelancers: `${publicStats.freelancers}+`,
-        rating: Number(publicStats.rating).toFixed(1),
-        satisfaction: "98%",
       })
     }
     loadStats()
@@ -23,8 +24,6 @@ export default function Hero() {
   const statItems = [
     { value: stats.projects, label: "Proyectos completados", icon: Briefcase },
     { value: stats.freelancers, label: "Freelancers activos", icon: Users },
-    { value: stats.rating, label: "Calificación promedio", icon: Star },
-    { value: stats.satisfaction, label: "Clientes satisfechos", icon: ShieldCheck },
   ]
 
   return (
@@ -73,18 +72,20 @@ export default function Hero() {
               Explorar servicios
               <ArrowRight className="h-4 w-4" strokeWidth={1.9} />
             </Link>
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/22 bg-white/20 px-7 py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:border-white/36 hover:bg-white/30 sm:text-base"
-            >
-              Ver dashboard
-              <BarChart3 className="h-4 w-4" strokeWidth={1.9} />
-            </Link>
+            {canAccessDashboard && (
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/22 bg-white/20 px-7 py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:border-white/36 hover:bg-white/30 sm:text-base"
+              >
+                Ver dashboard
+                <BarChart3 className="h-4 w-4" strokeWidth={1.9} />
+              </Link>
+            )}
           </div>
         </div>
 
         <div
-          className="mt-12 grid grid-cols-2 gap-3 border-t border-white/16 pt-6 sm:grid-cols-4 lg:mt-16 animate-fade-in-up"
+          className="mt-12 grid grid-cols-2 justify-center gap-3 border-t border-white/16 pt-6 mx-auto max-w-md lg:mt-16 animate-fade-in-up"
           style={{ animationDuration: "1s", animationDelay: "0.45s", opacity: 0, animationFillMode: "forwards" }}
         >
           {statItems.map((stat) => {
