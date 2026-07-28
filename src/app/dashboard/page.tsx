@@ -20,14 +20,14 @@ export default function DashboardPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
 
+  async function loadDashboard() {
+    const response=await fetch("/api/me/dashboard",{cache:"no-store"}),data=await response.json();if(response.ok){setOrders(data.orders);setMyServices(data.services);setCategories(data.categories)}
+  }
+
   useEffect(() => {
     if (authLoading) return
     if (!user) { setLoading(false); return }
-    async function load() {
-      const response=await fetch("/api/me/dashboard",{cache:"no-store"}),data=await response.json();if(response.ok){setOrders(data.orders);setMyServices(data.services);setCategories(data.categories)}
-      setLoading(false)
-    }
-    load()
+    loadDashboard().then(() => setLoading(false))
   }, [user, profile, authLoading])
 
   async function handleToggleActive(service: Service) {
@@ -59,7 +59,7 @@ export default function DashboardPage() {
 
   if (profile?.role === "client") {
     const myOrders = orders.filter((o) => o.buyer_id === user?.id)
-    return <ClientDashboard profile={profile} orders={myOrders} categories={categories} />
+    return <ClientDashboard profile={profile} orders={myOrders} categories={categories} onOrderUpdated={loadDashboard} />
   }
 
   const totalEarnings = orders
@@ -206,7 +206,7 @@ export default function DashboardPage() {
                             </span>
                           </td>
                           <td className="px-6 py-4">
-                            <OrderActions order={order} role={role} />
+                            <OrderActions order={order} role={role} onUpdated={loadDashboard} />
                           </td>
                         </tr>
                       )

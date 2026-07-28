@@ -19,7 +19,12 @@ export function getPool() {
       !process.env.AZURE_SQL_USER || !process.env.AZURE_SQL_PASSWORD) {
     throw new Error("Faltan variables de Azure SQL")
   }
-  global.azureSqlPool ??= new sql.ConnectionPool(config).connect()
+  if (!global.azureSqlPool) {
+    global.azureSqlPool = new sql.ConnectionPool(config).connect().catch((err) => {
+      global.azureSqlPool = undefined
+      throw err
+    })
+  }
   return global.azureSqlPool
 }
 

@@ -10,15 +10,21 @@ import type { Order } from "@/types"
 interface OrderActionsProps {
   order: Order
   role: OrderRole
+  onUpdated?: () => void
 }
 
-const ACTION_LABELS: Record<OrderStatus, string> = {
-  pending: "Pendiente",
-  in_progress: "Aceptar pedido",
-  delivered: "Marcar como entregado",
-  completed: "Aprobar y completar",
-  cancelled: "Cancelar",
-  disputed: "Abrir disputa",
+function actionLabel(from: OrderStatus, to: OrderStatus): string {
+  if (from === "pending" && to === "in_progress") return "Aceptar pedido"
+  if (from === "delivered" && to === "in_progress") return "Retomar trabajo"
+  const labels: Record<OrderStatus, string> = {
+    pending: "Pendiente",
+    in_progress: "En progreso",
+    delivered: "Marcar como entregado",
+    completed: "Aprobar y completar",
+    cancelled: "Cancelar",
+    disputed: "Abrir disputa",
+  }
+  return labels[to]
 }
 
 const ACTION_STYLES: Partial<Record<OrderStatus, string>> = {
@@ -29,7 +35,7 @@ const ACTION_STYLES: Partial<Record<OrderStatus, string>> = {
   disputed: "btn-secondary",
 }
 
-export default function OrderActions({ order, role }: OrderActionsProps) {
+export default function OrderActions({ order, role, onUpdated }: OrderActionsProps) {
   const router = useRouter()
   const { addToast } = useToast()
   const [busy, setBusy] = useState(false)
@@ -46,6 +52,7 @@ export default function OrderActions({ order, role }: OrderActionsProps) {
       addToast("Orden actualizada", "success")
       setPrompt(null)
       setNote("")
+      onUpdated?.()
       router.refresh()
     } catch (err) {
       addToast(err instanceof Error ? err.message : "No se pudo actualizar", "error")
@@ -62,7 +69,19 @@ export default function OrderActions({ order, role }: OrderActionsProps) {
     run(to)
   }
 
-  if (targets.length === 0) return null
+  if (targets.length === 0) {
+    if (order.status === "disputed") {
+      return (
+        <div className="rounded-lg border border-orange-500/30 bg-orange-500/8 px-3 py-2 text-xs text-orange-700 dark:text-orange-300">
+          <p className="font-bold">En revisión por un administrador</p>
+          <p className="mt-1 text-[11px] text-orange-600/70 dark:text-orange-300/60">
+            Disputa abierta el {new Date(order.updated_at).toLocaleDateString("es-HN")}. Te avisaremos cuando se resuelva.
+          </p>
+        </div>
+      )
+    }
+    return null
+  }
 
   if (prompt) {
     const isDelivery = prompt === "delivered"
@@ -100,7 +119,7 @@ export default function OrderActions({ order, role }: OrderActionsProps) {
           onClick={() => handleClick(to)}
           className={`${ACTION_STYLES[to] ?? "btn-secondary"} px-4 py-2 text-xs disabled:opacity-50`}
         >
-          {ACTION_LABELS[to]}
+          {actionLabel(order.status, to)}
         </button>
       ))}
     </div>

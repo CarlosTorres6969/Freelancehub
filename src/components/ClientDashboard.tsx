@@ -14,9 +14,10 @@ interface ClientDashboardProps {
   profile: Profile | null
   orders: Order[]
   categories: Category[]
+  onOrderUpdated?: () => void
 }
 
-export default function ClientDashboard({ profile, orders, categories }: ClientDashboardProps) {
+export default function ClientDashboard({ profile, orders, categories, onOrderUpdated }: ClientDashboardProps) {
   const [activeTab, setActiveTab] = useState("overview")
   const { favorites } = useFavorites()
 
@@ -140,7 +141,7 @@ export default function ClientDashboard({ profile, orders, categories }: ClientD
                     <p className="mb-3 text-xs text-orange-600 dark:text-orange-300">Disputa: {order.dispute_reason}</p>
                   )}
                   <div className="border-t border-card-border pt-3">
-                    <OrderActions order={order} role="buyer" />
+                    <OrderActions order={order} role="buyer" onUpdated={onOrderUpdated} />
                   </div>
                 </div>
               ))}

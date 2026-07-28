@@ -35,8 +35,8 @@ export default function ReviewForm({ serviceId, onSubmitted }: { serviceId: stri
     setSubmitting(true)
 
     try { const data=new FormData();data.set("serviceId",serviceId);data.set("rating",String(rating));data.set("content",comment.trim());await addReview(data)
-    } catch {
-      addToast("Error al enviar la reseña", "error")
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : "Error al enviar la reseña", "error")
       setSubmitting(false)
       return
     }
