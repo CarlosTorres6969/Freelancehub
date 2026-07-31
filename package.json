@@ -11,8 +11,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@azure/storage-blob": "^12.33.0",
     "chart.js": "^4.5.1",
+    "cloudinary": "^2.10.0",
     "lucide-react": "^1.21.0",
     "motion": "^12.42.2",
     "mssql": "^12.7.0",
