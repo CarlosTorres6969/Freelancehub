@@ -50,7 +50,7 @@ export default function AvatarUpload() {
         {profile?.avatar_url ? (
           <Image src={profile.avatar_url} alt="Avatar" fill className="object-cover" />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-2xl font-bold">
+          <div className="w-full h-full bg-gradient-to-br from-primary to-primary-strong flex items-center justify-center text-white text-2xl font-bold">
             {initials}
           </div>
         )}

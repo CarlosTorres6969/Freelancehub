@@ -44,7 +44,7 @@ function ServiceCardInner({ service }: { service: Service }) {
 
           {freelancerName && (
             <div className="mb-5 flex items-center gap-2" style={{ transform: "translateZ(10px)" }}>
-              <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-violet-500 via-fuchsia-500 to-cyan-400 text-xs font-bold text-white shadow-lg shadow-violet-500/20">
+              <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-primary to-primary-strong text-xs font-bold text-white shadow-md shadow-primary/15">
                 {freelancerAvatar ?? "?"}
               </div>
               <span className="truncate text-sm font-medium text-muted-fg transition-colors group-hover:text-foreground">{freelancerName}</span>

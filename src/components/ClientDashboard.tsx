@@ -28,10 +28,10 @@ export default function ClientDashboard({ profile, orders, categories, onOrderUp
   const hiredServices = orders.length
 
   const cards = [
-    { icon: CircleDollarSign, label: "Total Gastado", value: `L ${totalSpent.toLocaleString()}`, sub: "Servicios completados", accent: "from-violet-500 to-fuchsia-500" },
-    { icon: ShoppingBag, label: "Servicios Contratados", value: hiredServices, sub: "Historial completo", accent: "from-cyan-400 to-blue-500" },
-    { icon: Clock, label: "En Curso", value: activeOrders, sub: "Pendientes o en progreso", accent: "from-amber-400 to-rose-500" },
-    { icon: Heart, label: "Favoritos", value: favorites.length, sub: "Servicios guardados", accent: "from-emerald-400 to-teal-500" },
+    { icon: CircleDollarSign, label: "Total Gastado", value: `L ${totalSpent.toLocaleString()}`, sub: "Servicios completados", accent: "from-violet-600 to-violet-500" },
+    { icon: ShoppingBag, label: "Servicios Contratados", value: hiredServices, sub: "Historial completo", accent: "from-blue-600 to-blue-500" },
+    { icon: Clock, label: "En Curso", value: activeOrders, sub: "Pendientes o en progreso", accent: "from-amber-600 to-amber-500" },
+    { icon: Heart, label: "Favoritos", value: favorites.length, sub: "Servicios guardados", accent: "from-emerald-600 to-emerald-500" },
   ]
 
   return (
@@ -55,7 +55,7 @@ export default function ClientDashboard({ profile, orders, categories, onOrderUp
             <AnimatedSection key={card.label} delay={i * 100}>
               <div className="neo-card group rounded-lg p-5 transition-transform duration-300 hover:-translate-y-1">
                 <div className="mb-3 flex items-center gap-3">
-                  <div className={`grid h-11 w-11 place-items-center rounded-lg bg-gradient-to-br ${card.accent} text-white shadow-lg shadow-violet-500/15 transition-transform duration-300 group-hover:scale-105`}>
+                  <div className={`grid h-11 w-11 place-items-center rounded-lg bg-gradient-to-br ${card.accent} text-white shadow-md shadow-primary/10 transition-transform duration-300 group-hover:scale-105`}>
                     <Icon className="h-5 w-5" strokeWidth={1.8} />
                   </div>
                   <span className="text-sm font-bold text-muted-fg">{card.label}</span>

@@ -3,14 +3,23 @@ import Features from "@/components/Features"
 import Categories from "@/components/Categories"
 import Testimonials from "@/components/Testimonials"
 import CTASection from "@/components/CTASection"
+import { getCategories, getPublicStats, getTestimonials } from "@/lib/repositories/public"
 
-export default function Home() {
+export const revalidate = 300
+
+export default async function Home() {
+  const [categories, testimonials, stats] = await Promise.all([
+    getCategories(),
+    getTestimonials(),
+    getPublicStats(),
+  ])
+
   return (
     <>
-      <Hero />
+      <Hero stats={stats} />
       <Features />
-      <Categories />
-      <Testimonials />
+      <Categories categories={categories} />
+      <Testimonials testimonials={testimonials} />
       <CTASection />
     </>
   )

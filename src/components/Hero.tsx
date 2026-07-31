@@ -1,29 +1,20 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ArrowRight, BarChart3, Briefcase, Sparkles, Users } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 
-export default function Hero() {
+interface HeroProps {
+  stats: { projects: number; freelancers: number }
+}
+
+export default function Hero({ stats }: HeroProps) {
   const { profile } = useAuth()
   const canAccessDashboard = !!profile
-  const [stats, setStats] = useState({ projects: "0+", freelancers: "0+" })
-  useEffect(() => {
-    async function loadStats() {
-      const response=await fetch("/api/public/home"), data=await response.json()
-      const publicStats=data.stats??{projects:0,freelancers:0}
-      setStats({
-        projects: `${publicStats.projects}+`,
-        freelancers: `${publicStats.freelancers}+`,
-      })
-    }
-    loadStats()
-  }, [])
 
   const statItems = [
-    { value: stats.projects, label: "Proyectos completados", icon: Briefcase },
-    { value: stats.freelancers, label: "Freelancers activos", icon: Users },
+    { value: `${stats.projects}+`, label: "Proyectos completados", icon: Briefcase },
+    { value: `${stats.freelancers}+`, label: "Freelancers activos", icon: Users },
   ]
 
   return (

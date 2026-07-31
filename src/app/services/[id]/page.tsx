@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import { notFound } from "next/navigation"
 import { getReviewsByService, getServiceById, getServices } from "@/lib/repositories/public"
 import ServiceCard from "@/components/ServiceCard"
@@ -94,9 +95,9 @@ export default async function ServiceDetailPage({
             >
               <h2 className="font-semibold text-foreground mb-4">Sobre el freelancer</h2>
               <div className="flex items-center gap-4 mb-4">
-                <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-violet-500 via-fuchsia-500 to-cyan-400 text-lg font-bold text-white shadow-lg shadow-violet-500/20">
+                <div className="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-primary to-primary-strong text-lg font-bold text-white shadow-md shadow-primary/15">
                   {service.freelancer.avatar_url ? (
-                    <img src={service.freelancer.avatar_url} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                    <Image src={service.freelancer.avatar_url} alt="" fill sizes="56px" className="object-cover" />
                   ) : (
                     service.freelancer.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
                   )}

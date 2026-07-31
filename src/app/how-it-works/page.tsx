@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { ArrowRight, BadgeCheck, Globe2, MessageCircle, Rocket, ShieldCheck, Smartphone, Star, Zap } from "lucide-react"
 import AnimatedSection from "@/components/AnimatedSection"
 
@@ -51,7 +52,7 @@ export default function HowItWorksPage() {
               <div className="mb-4 text-3xl font-black text-violet-300 transition-colors group-hover:text-violet-500">
                 {step.number}
               </div>
-              <div className="mb-4 h-1 w-10 rounded-full bg-gradient-to-r from-violet-500 to-cyan-400 transition-all duration-300 group-hover:w-16" />
+              <div className="mb-4 h-1 w-10 rounded-full bg-primary transition-all duration-300 group-hover:w-16" />
               <h3 className="mb-3 text-xl font-black text-foreground">{step.title}</h3>
               <p className="text-sm leading-7 text-muted-fg">{step.description}</p>
             </div>
@@ -70,7 +71,7 @@ export default function HowItWorksPage() {
               const Icon = benefit.icon
               return (
                 <div key={benefit.title} className="neo-card group rounded-lg p-6 transition-transform duration-300 hover:-translate-y-1">
-                  <div className="mb-4 grid h-12 w-12 place-items-center rounded-lg bg-gradient-to-br from-violet-500 to-cyan-400 text-white shadow-lg shadow-violet-500/15">
+                  <div className="mb-4 grid h-12 w-12 place-items-center rounded-lg bg-gradient-to-br from-primary to-primary-strong text-white shadow-md shadow-primary/10">
                     <Icon className="h-6 w-6" strokeWidth={1.8} />
                   </div>
                   <h3 className="mb-2 font-black text-foreground transition-colors group-hover:text-violet-500">{benefit.title}</h3>
@@ -97,7 +98,7 @@ export default function HowItWorksPage() {
                 }`}
               >
                 {plan.highlighted && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-violet-500 to-cyan-400 px-3 py-1 text-xs font-bold text-white">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-xs font-bold text-white">
                     Más popular
                   </div>
                 )}
@@ -125,7 +126,7 @@ export default function HowItWorksPage() {
 
       <AnimatedSection>
         <div className="relative overflow-hidden rounded-lg border border-white/15 bg-[#080710] p-8 text-center text-white shadow-strong sm:p-12">
-          <img src="/visuals/purple-desert.jpg" alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-[0.38]" />
+          <Image src="/visuals/purple-desert.jpg" alt="" fill sizes="100vw" className="object-cover opacity-[0.38]" />
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,7,16,0.92),rgba(8,7,16,0.70),rgba(8,7,16,0.92))]" />
           <div className="relative z-10">
             <h2 className="mb-4 text-3xl font-black sm:text-4xl">¿Listo para empezar?</h2>

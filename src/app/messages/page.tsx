@@ -114,7 +114,7 @@ function MessagesContent() {
                   }`}
                 >
                   <div className="shrink-0">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 via-fuchsia-500 to-cyan-400 text-sm font-bold text-white shadow-lg shadow-violet-500/20">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary-strong text-sm font-bold text-white shadow-md shadow-primary/15">
                       {p?.name ? p.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase() : "??"}
                     </div>
                   </div>
@@ -132,7 +132,7 @@ function MessagesContent() {
           {otherProfile ? (
             <>
               <div className="flex items-center gap-3 border-b border-card-border px-6 py-4">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 via-fuchsia-500 to-cyan-400 text-xs font-bold text-white shadow-lg shadow-violet-500/20">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary-strong text-xs font-bold text-white shadow-md shadow-primary/15">
                   {otherProfile.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
                 </div>
                 <div>
@@ -148,7 +148,7 @@ function MessagesContent() {
                       <div
                         className={`max-w-[70%] rounded-2xl px-4 py-2.5 text-sm ${
                           isMe
-                            ? "rounded-br-md bg-gradient-to-br from-violet-600 to-fuchsia-500 text-white"
+                            ? "rounded-br-md bg-primary text-white"
                             : "rounded-bl-md bg-muted text-foreground"
                         }`}
                       >

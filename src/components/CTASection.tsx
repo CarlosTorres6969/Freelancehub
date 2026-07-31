@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { useState } from "react"
 import { ArrowRight, ChevronDown, Mail } from "lucide-react"
 import AnimatedSection from "./AnimatedSection"
@@ -69,12 +70,12 @@ export default function CTASection() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <AnimatedSection>
             <div className="relative overflow-hidden rounded-lg border border-white/15 bg-[#080710] p-8 text-center text-white shadow-strong sm:p-12">
-              <img
+              <Image
                 src="/visuals/purple-desert.jpg"
                 alt=""
-                loading="lazy"
-                decoding="async"
-                className="absolute inset-0 h-full w-full object-cover opacity-[0.42]"
+                fill
+                sizes="100vw"
+                className="object-cover opacity-[0.42]"
               />
               <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,7,16,0.90),rgba(8,7,16,0.68),rgba(8,7,16,0.90))]" />
               <div className="absolute inset-0 noise-overlay opacity-50" />

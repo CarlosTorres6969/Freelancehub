@@ -9,25 +9,25 @@ const features = [
     icon: Search,
     title: "Búsqueda inteligente",
     description: "Encuentra talento ideal por categoría, precio, calificación y especialidad sin perder tiempo.",
-    gradient: "from-violet-500 to-cyan-400",
+    gradient: "from-violet-600 to-violet-500",
   },
   {
     icon: ShieldCheck,
     title: "Pagos seguros",
     description: "Protección para ambas partes: el pago se libera cuando el trabajo está aprobado.",
-    gradient: "from-cyan-400 to-emerald-400",
+    gradient: "from-blue-600 to-blue-500",
   },
   {
     icon: MessageCircle,
     title: "Chat en tiempo real",
     description: "Aclara alcance, tiempos y entregables con conversaciones directas antes de contratar.",
-    gradient: "from-rose-500 to-violet-500",
+    gradient: "from-emerald-600 to-emerald-500",
   },
   {
     icon: BarChart3,
     title: "Panel de control",
     description: "Gestiona proyectos, órdenes, ingresos y métricas desde una experiencia clara y moderna.",
-    gradient: "from-amber-400 to-rose-500",
+    gradient: "from-amber-600 to-amber-500",
   },
 ]
 
@@ -56,7 +56,7 @@ export default function Features() {
               <AnimatedSection key={feature.title} delay={index * 100}>
                 <TiltCard tiltDegree={5} glare={true} scale={1.02}>
                   <div className="neo-card group min-h-64 rounded-lg p-6 transition-transform duration-300 hover:-translate-y-1">
-                    <div className={`mb-5 grid h-12 w-12 place-items-center rounded-lg bg-gradient-to-br ${feature.gradient} text-white shadow-lg shadow-violet-500/15 transition-transform duration-300 group-hover:scale-105`}>
+                    <div className={`mb-5 grid h-12 w-12 place-items-center rounded-lg bg-gradient-to-br ${feature.gradient} text-white shadow-md shadow-primary/10 transition-transform duration-300 group-hover:scale-105`}>
                       <Icon className="h-6 w-6" strokeWidth={1.8} />
                     </div>
                     <h3 className="text-lg font-bold text-foreground">{feature.title}</h3>

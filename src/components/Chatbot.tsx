@@ -113,7 +113,7 @@ export default function Chatbot() {
         <div className="fixed bottom-20 right-4 z-50 flex h-[520px] max-h-[75vh] w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-card-border bg-card-bg shadow-2xl sm:right-6 sm:w-96">
 
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-white/10 bg-gradient-to-r from-violet-700 via-fuchsia-600 to-cyan-500 px-4 py-3 text-white">
+          <div className="flex items-center justify-between border-b border-white/10 bg-primary-strong px-4 py-3 text-white">
             <div className="flex items-center gap-2.5">
               <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/15">
                 <Bot className="h-5 w-5" strokeWidth={1.8} />
@@ -160,14 +160,14 @@ export default function Chatbot() {
               >
                 {/* Avatar del bot */}
                 {msg.role === "assistant" && (
-                  <div className="mr-2 mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-500">
+                  <div className="mr-2 mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary">
                     <Bot className="h-3.5 w-3.5 text-white" strokeWidth={2} />
                   </div>
                 )}
                 <div
                   className={`max-w-[82%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
                     msg.role === "user"
-                      ? "rounded-br-md bg-gradient-to-br from-violet-600 to-fuchsia-500 text-white"
+                      ? "rounded-br-md bg-primary text-white"
                       : "rounded-bl-md bg-muted text-foreground"
                   }`}
                 >
@@ -179,7 +179,7 @@ export default function Chatbot() {
             {/* Indicador de escritura */}
             {loading && (
               <div className="flex justify-start">
-                <div className="mr-2 mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-500">
+                <div className="mr-2 mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary">
                   <Bot className="h-3.5 w-3.5 text-white" strokeWidth={2} />
                 </div>
                 <div className="rounded-2xl rounded-bl-md bg-muted px-4 py-3">
@@ -234,7 +234,7 @@ export default function Chatbot() {
       {/* ── Botón flotante ───────────────────────────────────────────────────── */}
       <button
         onClick={handleOpen}
-        className="fixed bottom-4 right-4 z-50 grid h-14 w-14 place-items-center rounded-full bg-gradient-to-br from-violet-600 via-fuchsia-500 to-cyan-400 text-white shadow-xl shadow-violet-500/25 transition-all hover:scale-110 sm:right-6"
+        className="fixed bottom-4 right-4 z-50 grid h-14 w-14 place-items-center rounded-full bg-primary text-white shadow-lg shadow-primary/20 transition-all hover:scale-110 hover:bg-primary-strong sm:right-6"
         aria-label={isOpen ? "Cerrar chat" : "Abrir chat"}
       >
         {isOpen

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 import { ImageIcon } from "lucide-react"
 
 export default function ImageGallery({ images }: { images?: string[] }) {
@@ -9,13 +10,15 @@ export default function ImageGallery({ images }: { images?: string[] }) {
 
   return (
     <div>
-      <div className="neo-card relative mb-3 aspect-video overflow-hidden rounded-lg bg-gradient-to-br from-violet-100 to-cyan-100 dark:from-violet-950 dark:to-cyan-950">
+      <div className="neo-card relative mb-3 aspect-video overflow-hidden rounded-lg bg-muted">
         {hasImages ? (
-          <img
+          <Image
             src={images[active]}
             alt=""
-            decoding="async"
-            className="h-full w-full object-cover"
+            fill
+            sizes="(min-width: 1024px) 640px, 100vw"
+            className="object-cover"
+            priority
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
@@ -32,13 +35,13 @@ export default function ImageGallery({ images }: { images?: string[] }) {
             <button
               key={i}
               onClick={() => setActive(i)}
-              className={`h-12 w-16 shrink-0 rounded-lg border-2 transition-all ${
+              className={`relative h-12 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-all ${
                 i === active
                   ? "border-violet-500 ring-2 ring-violet-500/30"
                   : "border-card-border opacity-60 hover:opacity-100"
               }`}
             >
-              <img src={src} alt="" loading="lazy" decoding="async" className="h-full w-full rounded-md object-cover" />
+              <Image src={src} alt="" fill sizes="64px" className="object-cover" />
             </button>
           ))}
         </div>

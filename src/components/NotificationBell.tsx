@@ -74,7 +74,7 @@ export default function NotificationBell() {
                   onClick={() => handleNotificationClick(notification)}
                   className={`flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-accent ${!notification.read ? "bg-accent/80" : ""}`}
                 >
-                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-violet-500 to-cyan-400 text-white">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-primary to-primary-strong text-white">
                     <Icon className="h-4 w-4" strokeWidth={1.8} />
                   </span>
                   <div className="min-w-0">

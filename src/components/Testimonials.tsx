@@ -1,17 +1,9 @@
-"use client"
-
-import { useEffect, useState } from "react"
 import { Quote, Star } from "lucide-react"
 import AnimatedSection from "./AnimatedSection"
 import TiltCard from "./TiltCard"
 import type { Testimonial } from "@/types"
 
-export default function Testimonials() {
-  const [testimonials, setTestimonials] = useState<Testimonial[]>([])
-  useEffect(() => {
-    fetch("/api/public/home").then(r=>r.json()).then(data=>setTestimonials(data.testimonials??[]))
-  }, [])
-
+export default function Testimonials({ testimonials }: { testimonials: Testimonial[] }) {
   return (
     <section className="mesh-surface py-20 sm:py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -50,7 +42,7 @@ export default function Testimonials() {
                     &ldquo;{testimonial.content}&rdquo;
                   </p>
                   <div className="mt-auto flex items-center gap-3">
-                    <div className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-violet-500 via-fuchsia-500 to-cyan-400 text-sm font-bold text-white shadow-lg shadow-violet-500/20">
+                    <div className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-primary to-primary-strong text-sm font-bold text-white shadow-md shadow-primary/15">
                       {testimonial.avatar}
                     </div>
                     <div>

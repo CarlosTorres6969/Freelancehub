@@ -116,7 +116,7 @@ function CheckoutContent() {
           <div className="neo-card rounded-lg p-6">
             <h2 className="font-semibold text-foreground mb-4">Detalle del servicio</h2>
             <div className="flex items-start gap-4 pb-4 border-b border-card-border">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 via-fuchsia-500 to-cyan-400 text-2xl text-white shadow-lg shadow-violet-500/20">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary-strong text-2xl text-white shadow-md shadow-primary/15">
                 {service.category?.icon ?? <Wrench className="h-7 w-7" strokeWidth={1.8} />}
               </div>
               <div className="flex-1 min-w-0">

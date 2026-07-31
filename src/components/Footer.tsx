@@ -13,7 +13,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-lg border border-white/20 bg-gradient-to-br from-violet-500 via-fuchsia-500 to-cyan-400 text-white shadow-lg shadow-violet-500/20">
+              <span className="grid h-10 w-10 place-items-center rounded-lg border border-white/20 bg-gradient-to-br from-primary to-primary-strong text-white shadow-md shadow-primary/15">
                 <Rocket className="h-5 w-5" strokeWidth={1.8} />
               </span>
               <span className="text-lg font-black tracking-tight text-foreground">FreelanceHub</span>

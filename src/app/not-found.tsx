@@ -5,7 +5,7 @@ export default function NotFound() {
   return (
     <div className="flex min-h-[70vh] items-center justify-center px-4">
       <div className="neo-card max-w-md rounded-lg p-8 text-center">
-        <div className="mx-auto mb-6 grid h-20 w-20 place-items-center rounded-lg bg-gradient-to-br from-violet-500 via-fuchsia-500 to-cyan-400 text-white shadow-lg shadow-violet-500/20">
+        <div className="mx-auto mb-6 grid h-20 w-20 place-items-center rounded-lg bg-gradient-to-br from-primary to-primary-strong text-white shadow-md shadow-primary/15">
           <Rocket className="h-10 w-10" strokeWidth={1.6} />
         </div>
         <h1 className="mb-2 text-6xl font-black text-foreground">404</h1>

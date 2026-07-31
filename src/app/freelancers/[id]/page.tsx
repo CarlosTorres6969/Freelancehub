@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import { getPublicFreelancer, getServicesByFreelancer } from "@/lib/repositories/public"
 import ServiceCard from "@/components/ServiceCard"
 import ContactFreelancerButton from "@/components/ContactFreelancerButton"
@@ -69,9 +70,9 @@ export default async function FreelancerProfilePage({
 
       <div className="neo-card mb-8 rounded-lg p-6 sm:p-8">
         <div className="flex flex-col sm:flex-row items-start gap-6">
-          <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-violet-500 via-fuchsia-500 to-cyan-400 text-3xl font-black text-white shadow-lg shadow-violet-500/20">
+          <div className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-primary to-primary-strong text-3xl font-black text-white shadow-md shadow-primary/15">
             {freelancer.avatar_url ? (
-              <img src={freelancer.avatar_url} alt="" decoding="async" className="w-full h-full object-cover" />
+              <Image src={freelancer.avatar_url} alt="" fill sizes="96px" className="object-cover" />
             ) : (
               initials
             )}

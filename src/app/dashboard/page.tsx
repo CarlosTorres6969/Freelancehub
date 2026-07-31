@@ -69,10 +69,10 @@ export default function DashboardPage() {
   const activeOrders = orders.filter((o) => o.status === "in_progress").length
 
   const cards = [
-    { icon: CircleDollarSign, label: "Ganancias Totales", value: `L ${totalEarnings.toLocaleString()}`, sub: "Órdenes completadas", accent: "from-violet-500 to-fuchsia-500" },
-    { icon: CheckCircle2, label: "Completados", value: completedOrders, sub: "Pedidos finalizados", accent: "from-emerald-400 to-teal-500" },
-    { icon: Zap, label: "Activos", value: activeOrders, sub: "En progreso", accent: "from-cyan-400 to-blue-500" },
-    { icon: Layers3, label: "Servicios", value: myServices.length, sub: "Publicados", accent: "from-amber-400 to-rose-500" },
+    { icon: CircleDollarSign, label: "Ganancias Totales", value: `L ${totalEarnings.toLocaleString()}`, sub: "Órdenes completadas", accent: "from-violet-600 to-violet-500" },
+    { icon: CheckCircle2, label: "Completados", value: completedOrders, sub: "Pedidos finalizados", accent: "from-emerald-600 to-emerald-500" },
+    { icon: Zap, label: "Activos", value: activeOrders, sub: "En progreso", accent: "from-blue-600 to-blue-500" },
+    { icon: Layers3, label: "Servicios", value: myServices.length, sub: "Publicados", accent: "from-amber-600 to-amber-500" },
   ]
 
   return (
@@ -96,7 +96,7 @@ export default function DashboardPage() {
             <AnimatedSection key={card.label} delay={i * 100}>
               <div className="neo-card group rounded-lg p-5 transition-transform duration-300 hover:-translate-y-1">
                 <div className="mb-3 flex items-center gap-3">
-                  <div className={`grid h-11 w-11 place-items-center rounded-lg bg-gradient-to-br ${card.accent} text-white shadow-lg shadow-violet-500/15 transition-transform duration-300 group-hover:scale-105`}>
+                  <div className={`grid h-11 w-11 place-items-center rounded-lg bg-gradient-to-br ${card.accent} text-white shadow-md shadow-primary/10 transition-transform duration-300 group-hover:scale-105`}>
                     <Icon className="h-5 w-5" strokeWidth={1.8} />
                   </div>
                   <span className="text-sm font-bold text-muted-fg">{card.label}</span>
@@ -149,7 +149,7 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-3">
                       <div className="h-2 w-32 overflow-hidden rounded-full bg-muted">
                         <div
-                          className="h-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-400 transition-colors"
+                          className="h-full rounded-full bg-primary transition-colors"
                           style={{ width: `${Math.min((cat.services_count / Math.max(...categories.map(c => c.services_count), 1)) * 100, 100)}%` }}
                         />
                       </div>

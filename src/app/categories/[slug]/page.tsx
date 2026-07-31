@@ -51,7 +51,7 @@ export default async function CategoryPage({
       </div>
 
       <div className="neo-card mb-6 flex items-center gap-4 rounded-lg p-6">
-        <span className="grid h-16 w-16 place-items-center rounded-lg bg-gradient-to-br from-violet-500 to-cyan-400 text-3xl text-white shadow-lg shadow-violet-500/20">{category.icon}</span>
+        <span className="grid h-16 w-16 place-items-center rounded-lg bg-gradient-to-br from-primary to-primary-strong text-3xl text-white shadow-md shadow-primary/15">{category.icon}</span>
         <div>
           <h1 className="text-3xl sm:text-4xl font-black text-foreground">{category.name}</h1>
           <p className="text-muted-fg mt-1">{category.description}</p>

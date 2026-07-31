@@ -74,7 +74,7 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <Link href="/" className="group flex items-center gap-3" aria-label="FreelanceHub">
-              <span className="grid h-10 w-10 place-items-center rounded-lg border border-white/20 bg-gradient-to-br from-violet-500 via-fuchsia-500 to-cyan-400 text-white shadow-lg shadow-violet-500/20">
+              <span className="grid h-10 w-10 place-items-center rounded-lg border border-white/20 bg-gradient-to-br from-primary to-primary-strong text-white shadow-md shadow-primary/15">
                 <Rocket className="h-5 w-5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" strokeWidth={1.8} />
               </span>
               <span className="font-bold text-xl tracking-tight text-foreground">FreelanceHub</span>
@@ -114,7 +114,7 @@ export default function Navbar() {
                 <div className="relative" ref={profileRef}>
                   <button
                     onClick={() => setProfileOpen(!profileOpen)}
-                    className="icon-btn-3d flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 via-fuchsia-500 to-cyan-400 text-xs font-bold text-white shadow-lg shadow-violet-500/20"
+                    className="icon-btn-3d flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary-strong text-xs font-bold text-white shadow-md shadow-primary/15"
                     aria-label="Abrir menú de perfil"
                   >
                     {initials}
