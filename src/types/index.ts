@@ -63,6 +63,9 @@ export interface Review {
   rating: number
   content: string
   created_at: string
+  updated_at: string | null
+  freelancer_reply: string | null
+  freelancer_reply_at: string | null
 }
 
 export interface Testimonial {

@@ -4,6 +4,7 @@ import { getReviewsByService, getServiceById, getServices } from "@/lib/reposito
 import ServiceCard from "@/components/ServiceCard"
 import ImageGallery from "@/components/ImageGallery"
 import ReviewForm from "@/components/ReviewForm"
+import ReviewCard from "@/components/ReviewCard"
 import TrackRecentlyViewed from "@/components/TrackRecentlyViewed"
 import RecentlyViewed from "@/components/RecentlyViewed"
 import AddToFavorites from "@/components/AddToFavorites"
@@ -150,34 +151,7 @@ export default async function ServiceDetailPage({
               </h2>
               <div className="space-y-4">
                 {serviceReviews.map((review) => (
-                  <div key={review.id} className="neo-card rounded-lg p-5">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-sm font-bold text-muted-fg">
-                          {review.user_avatar}
-                        </div>
-                        <div>
-                          <div className="font-medium text-foreground text-sm">{review.user_name}</div>
-                          <div className="text-xs text-muted-fg">
-                            {new Date(review.created_at).toLocaleDateString("es-HN")}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-0.5">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <svg
-                            key={i}
-                            className={`w-4 h-4 ${i < review.rating ? "text-amber-400" : "text-zinc-200 dark:text-zinc-600"}`}
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-sm text-muted-fg leading-relaxed">&ldquo;{review.content}&rdquo;</p>
-                  </div>
+                  <ReviewCard key={review.id} review={review} freelancerId={service.freelancer_id} />
                 ))}
               </div>
             </div>

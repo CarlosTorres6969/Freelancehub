@@ -7,6 +7,7 @@ Ejecuta los scripts en este orden sobre una base de datos vacía:
 3. `03_profile_extensions.sql`
 4. `04_language_certificates.sql`
 5. `05_native_language.sql`
+6. `06_review_edit_reply.sql`
 
 Puedes ejecutarlos desde Azure Portal Query Editor, SQL Server Management Studio,
 Azure Data Studio o `sqlcmd`. Ambos scripts están diseñados para Azure SQL Database.

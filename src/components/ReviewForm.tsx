@@ -1,18 +1,34 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Star } from "lucide-react"
-import { addReview } from "@/actions/reviews"
+import { addReview, getReviewEligibility } from "@/actions/reviews"
 import { useAuth } from "@/contexts/AuthContext"
 import { useToast } from "@/contexts/ToastContext"
 
 export default function ReviewForm({ serviceId, onSubmitted }: { serviceId: string; onSubmitted?: () => void }) {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { addToast } = useToast()
   const [rating, setRating] = useState(0)
   const [hover, setHover] = useState(0)
   const [comment, setComment] = useState("")
   const [submitting, setSubmitting] = useState(false)
+  const [eligible, setEligible] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    if (authLoading) return
+    if (!user) {
+      setEligible(null)
+      return
+    }
+    let cancelled = false
+    getReviewEligibility(serviceId).then((result) => {
+      if (!cancelled) setEligible(result)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [authLoading, user, serviceId])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -45,7 +61,28 @@ export default function ReviewForm({ serviceId, onSubmitted }: { serviceId: stri
     setRating(0)
     setComment("")
     setSubmitting(false)
+    setEligible(false)
     onSubmitted?.()
+  }
+
+  if (authLoading) return null
+
+  if (!user) {
+    return (
+      <div className="neo-card rounded-lg p-6 text-sm text-muted-fg">
+        Inicia sesión para dejar una reseña de este servicio.
+      </div>
+    )
+  }
+
+  if (eligible === null) return null
+
+  if (!eligible) {
+    return (
+      <div className="neo-card rounded-lg p-6 text-sm text-muted-fg">
+        Debes completar un pedido de este servicio antes de dejar una reseña.
+      </div>
+    )
   }
 
   return (
