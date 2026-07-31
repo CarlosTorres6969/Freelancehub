@@ -76,6 +76,16 @@ export function parseCommaList(raw: unknown, max = 20): string[] {
 }
 
 // ===================================================================
+// TEXTO
+// ===================================================================
+export function toTitleCase(raw: string): string {
+  return raw
+    .split(" ")
+    .map((word) => (word.length === 0 ? word : word[0].toUpperCase() + word.slice(1)))
+    .join(" ")
+}
+
+// ===================================================================
 // SERVICIOS
 // ===================================================================
 export interface ServiceInput {

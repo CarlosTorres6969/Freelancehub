@@ -7,6 +7,7 @@ export interface Profile {
   avatar_url: string | null
   role: UserRole
   title: string | null
+  title_document_url: string | null
   rating: number
   reviews_count: number
   completed_projects: number
@@ -15,7 +16,10 @@ export interface Profile {
   skills: string[]
   hourly_rate: number | null
   location: string | null
+  department: string | null
+  municipality: string | null
   languages: string[]
+  native_language: string | null
   verified: boolean
   created_at: string
 }

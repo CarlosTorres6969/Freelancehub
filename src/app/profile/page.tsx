@@ -3,9 +3,16 @@
 import { useState, useEffect } from "react"
 import { updateProfile } from "@/actions/profile"
 import { useAuth } from "@/contexts/AuthContext"
+import { toTitleCase } from "@/lib/validation"
 import AnimatedSection from "@/components/AnimatedSection"
 import AvatarUpload from "@/components/AvatarUpload"
+import TitleDocumentUpload from "@/components/TitleDocumentUpload"
+import LanguageCertificates from "@/components/LanguageCertificates"
+import LocationPicker from "@/components/LocationPicker"
+import TagAutocomplete from "@/components/TagAutocomplete"
 import PortfolioSection from "@/components/PortfolioSection"
+import { COMMON_LANGUAGES } from "@/data/languages"
+import { COMMON_SKILLS } from "@/data/skills"
 
 export default function ProfilePage() {
   const { user, profile, refreshProfile } = useAuth()
@@ -13,9 +20,11 @@ export default function ProfilePage() {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [bio, setBio] = useState("")
-  const [location, setLocation] = useState("")
-  const [skills, setSkills] = useState("")
-  const [languages, setLanguages] = useState("")
+  const [department, setDepartment] = useState("")
+  const [municipality, setMunicipality] = useState("")
+  const [skills, setSkills] = useState<string[]>([])
+  const [languages, setLanguages] = useState<string[]>([])
+  const [nativeLanguage, setNativeLanguage] = useState("")
   const [role, setRole] = useState<"client" | "freelancer">("client")
   const [changingRole, setChangingRole] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -28,12 +37,18 @@ export default function ProfilePage() {
       setTitle(profile.title ?? "")
       setDescription(profile.description ?? "")
       setBio(profile.bio ?? "")
-      setLocation(profile.location ?? "")
-      setSkills(profile.skills?.join(", ") ?? "")
-      setLanguages(profile.languages?.join(", ") ?? "")
+      setDepartment(profile.department ?? "")
+      setMunicipality(profile.municipality ?? "")
+      setSkills(profile.skills ?? [])
+      setLanguages(profile.languages ?? [])
+      setNativeLanguage(profile.native_language ?? "")
       setRole((profile.role === "freelancer" ? "freelancer" : "client"))
     }
   }, [profile])
+
+  useEffect(() => {
+    if (nativeLanguage && !languages.includes(nativeLanguage)) setNativeLanguage("")
+  }, [languages, nativeLanguage])
 
   async function handleRoleChange(newRole: "client" | "freelancer") {
     if (!user) return
@@ -50,7 +65,7 @@ export default function ProfilePage() {
     setError("")
     setSaved(false)
 
-    try {const data=new FormData();Object.entries({name,title,description,bio,location,skills,languages}).forEach(([k,v])=>data.set(k,v));await updateProfile(data)
+    try {const data=new FormData();Object.entries({name,title,description,bio,department,municipality,native_language:nativeLanguage}).forEach(([k,v])=>data.set(k,v));data.set("skills",skills.join(","));data.set("languages",languages.join(","));await updateProfile(data)
       setSaved(true)
       await refreshProfile()
       setTimeout(() => setSaved(false), 3000)
@@ -146,27 +161,16 @@ export default function ProfilePage() {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="input-future w-full rounded-lg px-4 py-2.5 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-muted-fg mb-1">Título profesional</label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Ej: Desarrollador Full Stack"
+                  onBlur={() => setName((current) => toTitleCase(current))}
                   className="input-future w-full rounded-lg px-4 py-2.5 text-sm"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-muted-fg mb-1">Ubicación</label>
-                <input
-                  type="text"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="Ej: Tegucigalpa, Honduras"
-                  className="input-future w-full rounded-lg px-4 py-2.5 text-sm"
+                <LocationPicker
+                  department={department}
+                  municipality={municipality}
+                  onChange={(next) => { setDepartment(next.department); setMunicipality(next.municipality) }}
                 />
               </div>
             </div>
@@ -183,54 +187,80 @@ export default function ProfilePage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-muted-fg mb-1">Idiomas</label>
-                <input
-                  type="text"
+                <TagAutocomplete
                   value={languages}
-                  onChange={(e) => setLanguages(e.target.value)}
-                  placeholder="Separados por coma: Español, Inglés"
-                  className="input-future w-full rounded-lg px-4 py-2.5 text-sm"
+                  onChange={setLanguages}
+                  suggestions={COMMON_LANGUAGES.map((l) => l.label)}
+                  placeholder="Escribe un idioma, ej: Inglés"
                 />
+                {languages.length > 0 && (
+                  <div className="mt-3">
+                    <label className="block text-xs text-muted-fg mb-1">Idioma nativo</label>
+                    <select
+                      value={nativeLanguage}
+                      onChange={(e) => setNativeLanguage(e.target.value)}
+                      className="input-future w-full rounded-lg px-4 py-2.5 text-sm"
+                    >
+                      <option value="">Ninguno</option>
+                      {languages.map((lang) => (
+                        <option key={lang} value={lang}>{lang}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </AnimatedSection>
 
-        <AnimatedSection>
-          <div>
-            <label className="block text-sm font-medium text-muted-fg mb-1">Biografía</label>
-            <textarea
-              rows={4}
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              className="input-future w-full resize-none rounded-lg px-4 py-2.5 text-sm"
-            />
-          </div>
-        </AnimatedSection>
-
-        <AnimatedSection>
-          <div>
-            <label className="block text-sm font-medium text-muted-fg mb-1">Habilidades (separadas por coma)</label>
-            <input
-              type="text"
-              value={skills}
-              onChange={(e) => setSkills(e.target.value)}
-              placeholder="React, TypeScript, Node.js"
-              className="input-future w-full rounded-lg px-4 py-2.5 text-sm"
-            />
-            {skills && (
-              <div className="flex flex-wrap gap-2 mt-3">
-                {skills.split(",").map((skill, i) => (
-                  <span
-                    key={i}
-                    className="chip rounded-lg px-3 py-1.5 text-sm"
-                  >
-                    {skill.trim()}
-                  </span>
-                ))}
+        {role === "freelancer" && (
+          <AnimatedSection>
+            <div className="p-6 rounded-xl border border-card-border bg-card-bg space-y-6">
+              <div>
+                <h3 className="text-sm font-semibold text-foreground mb-1">Perfil de Freelancer</h3>
+                <p className="text-xs text-muted-fg">Esta información solo la ven los clientes cuando estás en modo freelancer.</p>
               </div>
-            )}
-          </div>
-        </AnimatedSection>
+
+              <div>
+                <label className="block text-sm font-medium text-muted-fg mb-1">Título profesional</label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Ej: Desarrollador Full Stack"
+                  className="input-future w-full rounded-lg px-4 py-2.5 text-sm"
+                />
+                <div className="mt-3">
+                  <TitleDocumentUpload />
+                </div>
+              </div>
+
+              <LanguageCertificates languages={languages} />
+
+              <div>
+                <label className="block text-sm font-medium text-muted-fg mb-1">Habilidades</label>
+                <TagAutocomplete
+                  value={skills}
+                  onChange={setSkills}
+                  suggestions={COMMON_SKILLS}
+                  placeholder="Escribe una habilidad, ej: TypeScript"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-muted-fg mb-1">Biografía</label>
+                <textarea
+                  rows={4}
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  className="input-future w-full resize-none rounded-lg px-4 py-2.5 text-sm"
+                />
+              </div>
+
+              <PortfolioSection editable />
+            </div>
+          </AnimatedSection>
+        )}
 
         <AnimatedSection>
           <div className="flex items-center gap-3">
@@ -246,14 +276,6 @@ export default function ProfilePage() {
             )}
           </div>
         </AnimatedSection>
-
-        {profile?.role === "freelancer" && (
-          <AnimatedSection>
-            <div className="neo-card rounded-lg p-6">
-              <PortfolioSection editable />
-            </div>
-          </AnimatedSection>
-        )}
       </div>
     </div>
   )
