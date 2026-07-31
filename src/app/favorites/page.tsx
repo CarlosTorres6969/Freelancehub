@@ -22,7 +22,7 @@ export default function FavoritesPage() {
 
     supabase
       .from("services")
-      .select("*, category:categories(*)")
+      .select("*, category:categories(*), freelancer:profiles!services_freelancer_id_fkey(*)")
       .in("id", favorites)
       .then(({ data }) => {
         if (data) setServices(data)
@@ -103,7 +103,7 @@ export default function FavoritesPage() {
                     </h3>
                   </Link>
                   <p className="text-xs text-muted-fg mb-3">
-                    {service.freelancer_id ? "Freelancer" : "Freelancer"}
+                    {service.freelancer?.name ?? "Freelancer"}
                   </p>
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-lg">L {service.price.toLocaleString()}</span>

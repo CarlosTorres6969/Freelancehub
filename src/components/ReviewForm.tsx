@@ -47,7 +47,7 @@ export default function ReviewForm({ serviceId, onSubmitted }: { serviceId: stri
     })
 
     if (error) {
-      addToast("Error al enviar la reseña", "error")
+      addToast(error.message === 'duplicate key value violates unique constraint "reviews_service_id_user_id_key"' ? "Ya reseñaste este servicio" : error.message, "error")
       setSubmitting(false)
       return
     }

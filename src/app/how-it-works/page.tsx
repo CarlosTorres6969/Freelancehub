@@ -1,7 +1,10 @@
-"use client"
-
-import { useState } from "react"
+import type { Metadata } from "next"
 import Link from "next/link"
+
+export const metadata: Metadata = {
+  title: "Cómo Funciona",
+  description: "Descubre lo fácil que es conectar con talento excepcional o encontrar tu próximo proyecto freelance en FreelanceHub.",
+}
 import AnimatedSection from "@/components/AnimatedSection"
 
 const steps = [

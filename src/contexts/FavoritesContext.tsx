@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, useCallback } from "react"
+import { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useAuth } from "./AuthContext"
 
@@ -17,7 +17,7 @@ const FavoritesContext = createContext<{
 export function FavoritesProvider({ children }: { children: React.ReactNode }) {
   const [favorites, setFavorites] = useState<string[]>([])
   const { user } = useAuth()
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
     if (!user) {
@@ -31,7 +31,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
       .then(({ data }) => {
         if (data) setFavorites(data.map((f) => f.service_id))
       })
-  }, [user])
+  }, [user, supabase])
 
   const toggleFavorite = useCallback(async (serviceId: string) => {
     if (!user) return
@@ -51,15 +51,17 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
         .insert({ user_id: user.id, service_id: serviceId })
       if (!error) setFavorites((prev) => [...prev, serviceId])
     }
-  }, [user, favorites])
+  }, [user, supabase, favorites])
 
   const isFavorite = useCallback(
     (serviceId: string) => favorites.includes(serviceId),
     [favorites]
   )
 
+  const value = useMemo(() => ({ favorites, toggleFavorite, isFavorite }), [favorites, toggleFavorite, isFavorite])
+
   return (
-    <FavoritesContext.Provider value={{ favorites, toggleFavorite, isFavorite }}>
+    <FavoritesContext.Provider value={value}>
       {children}
     </FavoritesContext.Provider>
   )

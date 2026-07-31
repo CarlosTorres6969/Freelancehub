@@ -1,18 +1,20 @@
 "use client"
 
-import { Suspense, useState, useEffect } from "react"
+import { Suspense, useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { useAuth } from "@/contexts/AuthContext"
+import { useToast } from "@/contexts/ToastContext"
 import type { Service } from "@/types"
 
 function CheckoutContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user } = useAuth()
+  const { addToast } = useToast()
   const [service, setService] = useState<Service | null>(null)
-  const [step, setStep] = useState<1 | 2 | 3>(1)
+  const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
@@ -31,7 +33,7 @@ function CheckoutContent() {
       })
   }, [serviceId])
 
-  async function handleConfirm() {
+  const handleConfirm = useCallback(async () => {
     if (!user || !service) return
     setStep(2)
 
@@ -49,10 +51,13 @@ function CheckoutContent() {
       status: "pending",
     })
 
-    if (!error) {
-      setTimeout(() => setStep(3), 2000)
+    if (error) {
+      addToast("Error al crear la orden", "error")
+      setStep(1)
+      return
     }
-  }
+    setStep(3)
+  }, [user, service, supabase, addToast])
 
   if (loading) {
     return (
@@ -110,7 +115,7 @@ function CheckoutContent() {
       <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-8">Checkout</h1>
 
       <div className="flex items-center gap-2 mb-8">
-        {[1, 2, 3].map((s) => (
+        {[1, 2].map((s) => (
           <div key={s} className="flex items-center gap-2">
             <div
               className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
@@ -126,9 +131,9 @@ function CheckoutContent() {
               )}
             </div>
             <span className={`text-sm ${step >= s ? "text-foreground font-medium" : "text-muted-fg"}`}>
-              {s === 1 ? "Revisar" : s === 2 ? "Pagar" : "Confirmado"}
+              {s === 1 ? "Revisar" : "Confirmado"}
             </span>
-            {s < 3 && <div className="w-8 h-px bg-card-border mx-1" />}
+            {s < 2 && <div className="w-8 h-px bg-card-border mx-1" />}
           </div>
         ))}
       </div>
@@ -163,28 +168,15 @@ function CheckoutContent() {
           </div>
 
           <div className="p-6 rounded-2xl border border-card-border bg-card-bg">
-            <h2 className="font-semibold text-foreground mb-4">Método de pago</h2>
-            <div className="space-y-3">
-              <label className="flex items-center gap-3 p-3 rounded-xl border border-card-border hover:border-card-border cursor-pointer">
-                <input type="radio" name="payment" defaultChecked className="accent-indigo-500" />
-                <div className="flex items-center gap-2">
-                  <svg className="w-8 h-6" viewBox="0 0 50 32"><rect width="50" height="32" rx="4" fill="#1A1F71"/><text x="25" y="20" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">VISA</text></svg>
-                  <span className="text-sm text-foreground">Visa **** 4242</span>
-                </div>
-              </label>
-              <label className="flex items-center gap-3 p-3 rounded-xl border border-card-border hover:border-card-border cursor-pointer">
-                <input type="radio" name="payment" className="accent-indigo-500" />
-                <div className="flex items-center gap-2">
-                  <svg className="w-8 h-6" viewBox="0 0 50 32"><rect width="50" height="32" rx="4" fill="#EB001B"/><circle cx="17" cy="16" r="10" fill="#EB001B"/><circle cx="33" cy="16" r="10" fill="#F79E1B"/></svg>
-                  <span className="text-sm text-foreground">Mastercard **** 8888</span>
-                </div>
-              </label>
-              <button className="flex items-center gap-3 p-3 rounded-xl border border-dashed border-card-border hover:border-accent cursor-pointer w-full text-left">
-                <svg className="w-5 h-5 text-muted-fg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                <span className="text-sm text-muted-fg">Agregar nuevo método de pago</span>
-              </button>
+            <h2 className="font-semibold text-foreground mb-4">Pago seguro</h2>
+            <p className="text-sm text-muted-fg mb-4">
+              No se realizará ningún cobro ahora. El pago se procesará cuando el freelancer acepte tu orden.
+            </p>
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50">
+              <svg className="w-6 h-6 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <span className="text-sm text-muted-fg">Tus datos están seguros con nosotros. Solo liberamos el pago cuando estés satisfecho.</span>
             </div>
           </div>
 
@@ -192,21 +184,8 @@ function CheckoutContent() {
             onClick={handleConfirm}
             className="w-full bg-foreground text-background font-semibold py-3.5 rounded-xl hover:opacity-90 transition-all text-lg"
           >
-            Confirmar y Pagar L {total.toLocaleString()}
+            Solicitar Servicio — L {total.toLocaleString()}
           </button>
-        </div>
-      )}
-
-      {step === 2 && (
-        <div className="text-center py-20">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-            <svg className="w-8 h-8 text-muted-fg animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-            </svg>
-          </div>
-          <h2 className="text-xl font-semibold text-foreground mb-2">Procesando pago...</h2>
-          <p className="text-muted-fg">Por favor espera mientras procesamos tu pago.</p>
         </div>
       )}
 

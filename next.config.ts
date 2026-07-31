@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
         hostname: "*.supabase.co",
       },
     ],
+    formats: ["image/avif", "image/webp"],
   },
 };
 

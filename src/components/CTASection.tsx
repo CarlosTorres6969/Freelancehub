@@ -1,7 +1,8 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Link from "next/link"
-import { useState } from "react"
+import { createClient } from "@/lib/supabase/client"
 import AnimatedSection from "./AnimatedSection"
 
 const faqs = [
@@ -31,17 +32,36 @@ const faqs = [
   },
 ]
 
-const stats = [
-  { value: "500+", label: "Proyectos Completados" },
-  { value: "200+", label: "Freelancers Activos" },
-  { value: "4.8", label: "Calificación Promedio" },
-  { value: "98%", label: "Clientes Satisfechos" },
-  { value: "6", label: "Países Centroamericanos" },
-  { value: "24/7", label: "Soporte al Cliente" },
-]
-
 export default function CTASection() {
   const [openFaq, setOpenFaq] = useState<string | null>(null)
+  const [stats, setStats] = useState<Record<string, string>>({})
+  const supabase = createClient()
+
+  useEffect(() => {
+    async function loadStats() {
+      const [{ count: projects }, { count: freelancers }, { data: ratingData }] = await Promise.all([
+        supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "completed"),
+        supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "freelancer"),
+        supabase.from("services").select("rating"),
+      ])
+      const avgRating = ratingData && ratingData.length > 0
+        ? (ratingData.reduce((sum, s) => sum + s.rating, 0) / ratingData.length).toFixed(1)
+        : "4.8"
+      const { data: reviews } = await supabase.from("reviews").select("rating")
+      const satisfaction = reviews && reviews.length > 0
+        ? Math.round((reviews.filter(r => r.rating >= 4).length / reviews.length) * 100) + "%"
+        : "98%"
+      setStats({
+        projects: `${projects ?? 0}+`,
+        freelancers: `${freelancers ?? 0}+`,
+        rating: avgRating,
+        satisfaction,
+        countries: "6",
+        support: "24/7",
+      })
+    }
+    loadStats()
+  }, [])
 
   return (
     <>
@@ -50,10 +70,17 @@ export default function CTASection() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <AnimatedSection>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
-              {stats.map((stat) => (
+              {[
+                { value: stats.projects, label: "Proyectos Completados" },
+                { value: stats.freelancers, label: "Freelancers Activos" },
+                { value: stats.rating, label: "Calificación Promedio" },
+                { value: stats.satisfaction, label: "Clientes Satisfechos" },
+                { value: stats.countries, label: "Países Centroamericanos" },
+                { value: stats.support, label: "Soporte al Cliente" },
+              ].map((stat) => (
                 <div key={stat.label} className="text-center group">
                   <div className="text-3xl font-bold text-foreground group-hover:text-gradient transition-all duration-300">
-                    {stat.value}
+                    {stat.value ?? "—"}
                   </div>
                   <div className="text-sm text-muted-fg mt-1 group-hover:text-foreground transition-colors">
                     {stat.label}

@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useCallback, useEffect } from "react"
+import { createContext, useContext, useState, useCallback, useEffect, useMemo } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useAuth } from "./AuthContext"
 import type { AppNotification } from "@/types"
@@ -20,7 +20,7 @@ const NotificationContext = createContext<{
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const [notifications, setNotifications] = useState<AppNotification[]>([])
   const { user } = useAuth()
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
     if (!user) { setNotifications([]); return }
@@ -48,7 +48,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
-  }, [user])
+  }, [user, supabase])
 
   const unreadCount = notifications.filter((n) => !n.read).length
 

@@ -146,7 +146,7 @@ export function CategoryChart({ categories, orders }: { categories: Category[]; 
   const data = useMemo(() => {
     const counts: Record<string, number> = {}
     for (const o of orders) {
-      const catName = (o.service as any)?.category?.name ?? "Otros"
+      const catName = ((o.service as Order["service"])?.category as { name?: string })?.name ?? "Otros"
       counts[catName] = (counts[catName] || 0) + 1
     }
     if (Object.keys(counts).length === 0) {

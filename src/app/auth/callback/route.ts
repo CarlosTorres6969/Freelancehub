@@ -33,6 +33,19 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user.app_metadata.provider === "google") {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .maybeSingle()
+
+        if (profile?.role === "client") {
+          return NextResponse.redirect(`${origin}/onboarding`)
+        }
+      }
+
       return NextResponse.redirect(`${origin}${next}`)
     }
   }

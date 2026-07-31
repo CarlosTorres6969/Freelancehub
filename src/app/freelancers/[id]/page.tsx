@@ -1,9 +1,26 @@
+import type { Metadata } from "next"
+import Image from "next/image"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import ServiceCard from "@/components/ServiceCard"
+import ContactButton from "@/components/ContactButton"
 
 export const revalidate = 60
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const supabase = await createClient()
+  const { data: freelancer } = await supabase
+    .from("profiles")
+    .select("name, title")
+    .eq("id", id)
+    .single()
+  return {
+    title: freelancer?.name ?? "Freelancer",
+    description: freelancer?.title ?? "Perfil de freelancer en FreelanceHub.",
+  }
+}
 
 export default async function FreelancerProfilePage({
   params,
@@ -53,7 +70,7 @@ export default async function FreelancerProfilePage({
         <div className="flex flex-col sm:flex-row items-start gap-6">
           <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center text-3xl font-bold text-muted-fg shrink-0 overflow-hidden">
             {freelancer.avatar_url ? (
-              <img src={freelancer.avatar_url} alt="" className="w-full h-full object-cover" />
+              <Image src={freelancer.avatar_url} alt="" width={96} height={96} className="w-full h-full object-cover" />
             ) : (
               initials
             )}
@@ -94,6 +111,10 @@ export default async function FreelancerProfilePage({
             </div>
 
             <p className="mt-4 text-muted-fg leading-relaxed">{freelancer.bio}</p>
+
+            <div className="mt-4">
+              <ContactButton freelancerId={freelancer.id} label="Contactar" />
+            </div>
 
             <div className="mt-4 flex flex-wrap gap-2">
               {freelancer.skills.map((skill: string) => (

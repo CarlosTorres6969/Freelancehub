@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { memo, useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { useAuth } from "@/contexts/AuthContext"
 import AuthModal from "./AuthModal"
@@ -8,10 +8,11 @@ import NotificationBell from "./NotificationBell"
 import ThemeToggle from "./ThemeToggle"
 import { useFavorites } from "@/contexts/FavoritesContext"
 
-export default function Navbar() {
+const Navbar = memo(function Navbar() {
   const { user, profile, signOut } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
   const [authOpen, setAuthOpen] = useState(false)
+  const [authView, setAuthView] = useState<"login" | "register">("login")
   const [profileOpen, setProfileOpen] = useState(false)
   const { favorites } = useFavorites()
   const profileRef = useRef<HTMLDivElement>(null)
@@ -108,6 +109,16 @@ export default function Navbar() {
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
                           Dashboard
                         </Link>
+                        {profile?.role === "freelancer" && (
+                          <Link
+                            href="/services/new"
+                            onClick={() => setProfileOpen(false)}
+                            className="flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-muted rounded-lg transition-colors"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                            Nuevo Servicio
+                          </Link>
+                        )}
                         <button
                           onClick={() => { signOut(); setProfileOpen(false) }}
                           className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors"
@@ -120,12 +131,20 @@ export default function Navbar() {
                   )}
                 </div>
               ) : (
-                <button
-                  onClick={() => setAuthOpen(true)}
-                  className="text-sm font-medium bg-foreground text-background px-4 py-2 rounded-lg hover:bg-zinc-800 transition-colors"
-                >
-                  Registrarse
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => { setAuthView("login"); setAuthOpen(true) }}
+                    className="text-sm font-medium text-muted-fg hover:text-foreground px-4 py-2 rounded-lg transition-colors"
+                  >
+                    Iniciar Sesión
+                  </button>
+                  <button
+                    onClick={() => { setAuthView("register"); setAuthOpen(true) }}
+                    className="text-sm font-medium bg-foreground text-background px-4 py-2 rounded-lg hover:bg-zinc-800 transition-colors"
+                  >
+                    Registrarse
+                  </button>
+                </div>
               )}
             </div>
 
@@ -164,7 +183,7 @@ export default function Navbar() {
                 </button>
               ) : (
                 <button
-                  onClick={() => { setAuthOpen(true); setMenuOpen(false) }}
+                  onClick={() => { setAuthView("register"); setAuthOpen(true); setMenuOpen(false) }}
                   className="block w-full text-left px-3 py-2 text-sm font-medium bg-foreground text-background rounded-lg"
                 >
                   Registrarse
@@ -175,7 +194,9 @@ export default function Navbar() {
         </div>
       </nav>
 
-      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
+      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} initialView={authView} />
     </>
   )
-}
+})
+
+export default Navbar

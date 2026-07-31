@@ -1,13 +1,25 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useAuth } from "@/contexts/AuthContext"
 import AnimatedSection from "@/components/AnimatedSection"
+import { useToast } from "@/contexts/ToastContext"
 import type { Conversation, Message, Profile } from "@/types"
+
+function updateConversationInList(convs: Conversation[], convId: string, updates: Partial<Conversation>): Conversation[] {
+  const updated = convs.map(c => c.id === convId ? { ...c, ...updates } : c)
+  updated.sort((a, b) => {
+    const ta = a.last_message_time ?? a.created_at
+    const tb = b.last_message_time ?? b.created_at
+    return new Date(tb).getTime() - new Date(ta).getTime()
+  })
+  return updated
+}
 
 export default function MessagesPage() {
   const { user } = useAuth()
+  const { addToast } = useToast()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [messages, setMessages] = useState<Message[]>([])
   const [selected, setSelected] = useState<string | null>(null)
@@ -25,7 +37,7 @@ export default function MessagesPage() {
       const { data } = await supabase
         .from("conversations")
         .select("*")
-        .contains("participant_ids", [userId])
+        .filter("participant_ids", "cs", `{${userId}}`)
         .order("last_message_time", { ascending: false, nullsFirst: false })
 
       if (data) {
@@ -51,7 +63,7 @@ export default function MessagesPage() {
     }
 
     loadConversations()
-  }, [user])
+  }, [user, supabase])
 
   useEffect(() => {
     if (!selected) return
@@ -81,6 +93,12 @@ export default function MessagesPage() {
             if (prev.some((m) => m.id === newMsg.id)) return prev
             return [...prev, newMsg]
           })
+          setConversations((prev) =>
+            updateConversationInList(prev, newMsg.conversation_id, {
+              last_message: newMsg.content,
+              last_message_time: newMsg.created_at,
+            })
+          )
         }
       )
       .subscribe()
@@ -92,24 +110,66 @@ export default function MessagesPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
-  async function handleSend() {
+  const handleSend = useCallback(async () => {
     if (!input.trim() || !user || !selected) return
+    const content = input.trim()
+    setInput("")
 
-    const { error } = await supabase.from("messages").insert({
+    const msgId = crypto.randomUUID()
+    const now = new Date().toISOString()
+
+    const optimistic: Message = {
+      id: msgId,
       conversation_id: selected,
       sender_id: user.id,
-      content: input.trim(),
+      content,
+      created_at: now,
+    } as Message
+
+    setMessages((prev) => [...prev, optimistic])
+    setConversations((prev) =>
+      updateConversationInList(prev, selected, {
+        last_message: content,
+        last_message_time: now,
+      })
+    )
+
+    const { error } = await supabase.from("messages").insert({
+      id: msgId,
+      conversation_id: selected,
+      sender_id: user.id,
+      content,
     })
 
-    if (!error) {
-      await supabase
-        .from("conversations")
-        .update({ last_message: input.trim(), last_message_time: new Date().toISOString() })
-        .eq("id", selected)
-
-      setInput("")
+    if (error) {
+      addToast("Error al enviar mensaje", "error")
+      setMessages((prev) => prev.filter((m) => m.id !== optimistic.id))
+      return
     }
-  }
+
+    await supabase
+      .from("conversations")
+      .update({ last_message: content, last_message_time: now })
+      .eq("id", selected)
+  }, [selected, input, user, supabase, addToast])
+
+  const handleDelete = useCallback(async (convId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!confirm("¿Eliminar esta conversación? Los mensajes se borrarán permanentemente.")) return
+
+    const { error } = await supabase.from("messages").delete().eq("conversation_id", convId)
+    if (error) { addToast("Error al eliminar mensajes", "error"); return }
+
+    const { error: err2 } = await supabase.from("conversations").delete().eq("id", convId)
+    if (err2) { addToast("Error al eliminar conversación", "error"); return }
+
+    setConversations((prev) => prev.filter((c) => c.id !== convId))
+    if (selected === convId) {
+      setSelected(null)
+      setMessages([])
+    }
+    addToast("Conversación eliminada", "success")
+  }, [supabase, addToast, selected])
 
   if (!user) {
     return (
@@ -119,14 +179,14 @@ export default function MessagesPage() {
     )
   }
 
-  const filtered = conversations.filter((c) => {
+  const filtered = useMemo(() => conversations.filter((c) => {
     const participant = participants[c.participant_ids.find((id) => id !== user.id) ?? ""]
     return participant?.name?.toLowerCase().includes(search.toLowerCase())
-  })
+  }), [conversations, participants, user, search])
 
-  const activeConv = conversations.find((c) => c.id === selected)
-  const otherId = activeConv?.participant_ids.find((id) => id !== user.id)
-  const otherProfile = otherId ? participants[otherId] : null
+  const activeConv = useMemo(() => conversations.find((c) => c.id === selected), [conversations, selected])
+  const otherId = useMemo(() => activeConv?.participant_ids.find((id) => id !== user.id), [activeConv, user])
+  const otherProfile = useMemo(() => otherId ? participants[otherId] : null, [otherId, participants])
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -150,25 +210,35 @@ export default function MessagesPage() {
               const pid = conv.participant_ids.find((id) => id !== user.id)
               const p = pid ? participants[pid] : null
               return (
-                <button
-                  key={conv.id}
-                  onClick={() => setSelected(conv.id)}
-                  className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors ${
-                    selected === conv.id
-                      ? "bg-indigo-50 dark:bg-indigo-950/30 border-l-2 border-indigo-500"
-                      : "hover:bg-muted/50"
-                  }`}
-                >
-                  <div className="relative shrink-0">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-sm font-bold">
-                      {p?.name ? p.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase() : "??"}
+                <div key={conv.id} className="group relative">
+                  <button
+                    onClick={() => setSelected(conv.id)}
+                    className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors ${
+                      selected === conv.id
+                        ? "bg-indigo-50 dark:bg-indigo-950/30 border-l-2 border-indigo-500"
+                        : "hover:bg-muted/50"
+                    }`}
+                  >
+                    <div className="relative shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-sm font-bold">
+                        {p?.name ? p.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase() : "??"}
+                      </div>
                     </div>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm text-foreground truncate">{p?.name ?? "Usuario"}</p>
-                    <p className="text-xs text-muted-fg truncate">{conv.last_message ?? "Sin mensajes"}</p>
-                  </div>
-                </button>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-foreground truncate">{p?.name ?? "Usuario"}</p>
+                      <p className="text-xs text-muted-fg truncate">{conv.last_message ?? "Sin mensajes"}</p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={(e) => handleDelete(conv.id, e)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-muted-fg hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 opacity-0 group-hover:opacity-100 transition-all"
+                    title="Eliminar conversación"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
               )
             })}
           </div>
@@ -189,7 +259,6 @@ export default function MessagesPage() {
               <div className="flex-1 overflow-y-auto p-6 space-y-4">
                 {messages.map((msg) => {
                   const isMe = msg.sender_id === user.id
-                  const senderProfile = isMe ? null : otherProfile
                   return (
                     <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                       <div

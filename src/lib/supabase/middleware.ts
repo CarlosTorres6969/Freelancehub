@@ -25,19 +25,47 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const protectedPaths = ["/dashboard", "/messages", "/checkout", "/favorites", "/profile"]
+  const protectedPaths = ["/dashboard", "/messages", "/checkout", "/favorites", "/profile", "/services/new"]
   const isProtected = protectedPaths.some((p) =>
     request.nextUrl.pathname.startsWith(p)
   )
 
-  if (isProtected && !user) {
+  if (!isProtected) return supabaseResponse
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
     const url = request.nextUrl.clone()
     url.pathname = "/"
     url.searchParams.set("auth", "login")
+    return NextResponse.redirect(url)
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single()
+
+  const role = profile?.role
+
+  if (role === "client" && request.nextUrl.pathname.startsWith("/dashboard/freelancer")) {
+    const url = request.nextUrl.clone()
+    url.pathname = "/dashboard/client"
+    return NextResponse.redirect(url)
+  }
+
+  if (role === "client" && request.nextUrl.pathname.startsWith("/services/new")) {
+    const url = request.nextUrl.clone()
+    url.pathname = "/marketplace"
+    return NextResponse.redirect(url)
+  }
+
+  if (role === "freelancer" && request.nextUrl.pathname.startsWith("/dashboard/client")) {
+    const url = request.nextUrl.clone()
+    url.pathname = "/dashboard/freelancer"
     return NextResponse.redirect(url)
   }
 

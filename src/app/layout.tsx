@@ -18,7 +18,10 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "FreelanceHub - Conectando Talento Centroamericano",
+  title: {
+    template: "%s | FreelanceHub",
+    default: "FreelanceHub - Conectando Talento Centroamericano",
+  },
   description:
     "La plataforma líder para conectar talento freelance con proyectos innovadores en Centroamérica.",
 }

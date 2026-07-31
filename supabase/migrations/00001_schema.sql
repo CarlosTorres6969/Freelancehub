@@ -10,7 +10,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- =====================================================
 CREATE TABLE profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  email TEXT NOT NULL,
+  email TEXT,
   name TEXT NOT NULL,
   avatar_url TEXT,
   role TEXT NOT NULL DEFAULT 'client' CHECK (role IN ('client', 'freelancer', 'admin')),
@@ -31,16 +31,23 @@ CREATE TABLE profiles (
 -- Trigger: crear profile automáticamente al registrarse
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+  user_email TEXT;
+  user_name TEXT;
 BEGIN
-  INSERT INTO profiles (id, email, name)
-  VALUES (
-    NEW.id,
-    NEW.email,
-    COALESCE(NEW.raw_user_meta_data->>'name', split_part(NEW.email, '@', 1))
+  user_email := COALESCE(NEW.email, NEW.raw_user_meta_data->>'email');
+  user_name := COALESCE(
+    NEW.raw_user_meta_data->>'full_name',
+    NEW.raw_user_meta_data->>'name',
+    split_part(COALESCE(user_email, 'usuario'), '@', 1)
   );
+  user_role := COALESCE(NEW.raw_user_meta_data->>'role', 'client');
+
+  INSERT INTO public.profiles (id, email, name, role)
+  VALUES (NEW.id, user_email, user_name, user_role);
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 CREATE OR REPLACE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users

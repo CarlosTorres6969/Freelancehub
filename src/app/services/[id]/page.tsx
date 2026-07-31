@@ -1,3 +1,5 @@
+import type { Metadata } from "next"
+import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
@@ -7,8 +9,23 @@ import ReviewForm from "@/components/ReviewForm"
 import TrackRecentlyViewed from "@/components/TrackRecentlyViewed"
 import RecentlyViewed from "@/components/RecentlyViewed"
 import AddToFavorites from "@/components/AddToFavorites"
+import ContactButton from "@/components/ContactButton"
 
 export const revalidate = 60
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const supabase = await createClient()
+  const { data: service } = await supabase
+    .from("services")
+    .select("title, description")
+    .eq("id", id)
+    .single()
+  return {
+    title: service?.title ?? "Servicio",
+    description: service?.description ?? "Detalle del servicio en FreelanceHub.",
+  }
+}
 
 export default async function ServiceDetailPage({
   params,
@@ -88,7 +105,7 @@ export default async function ServiceDetailPage({
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center text-lg font-medium text-muted-fg">
                   {service.freelancer.avatar_url ? (
-                    <img src={service.freelancer.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
+                    <Image src={service.freelancer.avatar_url} alt="" width={56} height={56} className="rounded-full object-cover w-14 h-14" />
                   ) : (
                     service.freelancer.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
                   )}
@@ -216,9 +233,7 @@ export default async function ServiceDetailPage({
             >
               Contratar Servicio
             </Link>
-            <button className="w-full border border-card-border text-muted-fg font-medium py-3 rounded-xl hover:bg-accent transition-colors">
-              Enviar Mensaje
-            </button>
+            <ContactButton freelancerId={service.freelancer_id} />
           </div>
         </div>
       </div>

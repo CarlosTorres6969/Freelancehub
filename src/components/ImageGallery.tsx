@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 
 export default function ImageGallery({ images }: { images?: string[] }) {
   const [active, setActive] = useState(0)
@@ -10,10 +11,12 @@ export default function ImageGallery({ images }: { images?: string[] }) {
     <div>
       <div className="relative aspect-video bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-950 dark:to-purple-950 rounded-xl overflow-hidden mb-3">
         {hasImages ? (
-          <img
+          <Image
             src={images[active]}
             alt=""
-            className="w-full h-full object-cover"
+            fill
+            sizes="(max-width: 768px) 100vw, 66vw"
+            className="object-cover"
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
@@ -36,7 +39,7 @@ export default function ImageGallery({ images }: { images?: string[] }) {
                   : "border-zinc-200 dark:border-zinc-700 opacity-60 hover:opacity-100"
               }`}
             >
-              <img src={src} alt="" className="w-full h-full rounded-md object-cover" />
+              <Image src={src} alt="" width={64} height={48} className="rounded-md object-cover" />
             </button>
           ))}
         </div>

@@ -93,7 +93,7 @@ export interface Order {
   service_id: string
   buyer_id: string
   freelancer_id: string
-  status: "pending" | "in_progress" | "completed" | "cancelled"
+  status: "pending" | "accepted" | "in_progress" | "completed" | "cancelled"
   price: number
   service_fee: number
   total: number
