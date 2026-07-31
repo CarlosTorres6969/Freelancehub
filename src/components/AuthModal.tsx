@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { X } from "lucide-react"
+import LocationPicker from "@/components/LocationPicker"
+import TagAutocomplete from "@/components/TagAutocomplete"
+import { COMMON_LANGUAGES } from "@/data/languages"
 
 export type AuthMode = "login" | "register"
 
@@ -17,6 +20,12 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [name, setName] = useState("")
+  const [department, setDepartment] = useState("")
+  const [municipality, setMunicipality] = useState("")
+  const [description, setDescription] = useState("")
+  const [languages, setLanguages] = useState<string[]>([])
+  const [nativeLanguage, setNativeLanguage] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [successMsg, setSuccessMsg] = useState("")
@@ -27,6 +36,10 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
       setSuccessMsg("")
     }
   }, [isOpen, initialMode])
+
+  useEffect(() => {
+    if (nativeLanguage && !languages.includes(nativeLanguage)) setNativeLanguage("")
+  }, [languages, nativeLanguage])
 
   if (!isOpen) return null
 
@@ -46,8 +59,28 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
           setError("La contraseña debe tener al menos 6 caracteres")
           return
         }
+        if (!name.trim()) {
+          setError("Ingresa tu nombre completo")
+          return
+        }
+        if (!department || !municipality) {
+          setError("Selecciona tu ubicación")
+          return
+        }
+        if (!description.trim()) {
+          setError("Ingresa una descripción corta")
+          return
+        }
+        if (languages.length === 0) {
+          setError("Agrega al menos un idioma")
+          return
+        }
+        if (!nativeLanguage) {
+          setError("Selecciona tu idioma nativo")
+          return
+        }
 
-        const response = await fetch("/api/auth/register", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({email,password}) })
+        const response = await fetch("/api/auth/register", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({email,password,name,department,municipality,description,languages,native_language:nativeLanguage}) })
         const result = await response.json()
         if (!response.ok) {
           setError(result.error || "Error al crear la cuenta")
@@ -152,6 +185,69 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
                 required
                 className="input-future w-full rounded-lg px-4 py-2.5 text-sm placeholder:text-muted-fg"
               />
+            </div>
+          )}
+
+          {mode === "register" && (
+            <div className="animate-fade-in space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">Nombre completo</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Tu nombre completo"
+                  required
+                  className="input-future w-full rounded-lg px-4 py-2.5 text-sm placeholder:text-muted-fg"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">Ubicación</label>
+                <LocationPicker
+                  department={department}
+                  municipality={municipality}
+                  onChange={(next) => { setDepartment(next.department); setMunicipality(next.municipality) }}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">Descripción corta</label>
+                <input
+                  type="text"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Breve descripción sobre ti"
+                  required
+                  className="input-future w-full rounded-lg px-4 py-2.5 text-sm placeholder:text-muted-fg"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">Idiomas</label>
+                <TagAutocomplete
+                  value={languages}
+                  onChange={setLanguages}
+                  suggestions={COMMON_LANGUAGES.map((l) => l.label)}
+                  placeholder="Escribe un idioma, ej: Inglés"
+                />
+                {languages.length > 0 && (
+                  <div className="mt-3">
+                    <label className="block text-xs text-muted-fg mb-1">Idioma nativo</label>
+                    <select
+                      value={nativeLanguage}
+                      onChange={(e) => setNativeLanguage(e.target.value)}
+                      required
+                      className="input-future w-full rounded-lg px-4 py-2.5 text-sm"
+                    >
+                      <option value="">Selecciona tu idioma nativo</option>
+                      {languages.map((lang) => (
+                        <option key={lang} value={lang}>{lang}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
