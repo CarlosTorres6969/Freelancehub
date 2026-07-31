@@ -65,12 +65,13 @@ function CheckoutContent() {
   }
 
   if (!user) {
+    const target = `/checkout?${searchParams.toString()}`
     return (
       <div className="mx-auto max-w-3xl px-4 py-12 text-center">
         <h1 className="text-2xl font-bold text-foreground mb-4">Inicia sesión para continuar</h1>
         <p className="text-muted-fg mb-6">Debes iniciar sesión para contratar un servicio.</p>
         <Link
-          href="/?auth=login"
+          href={`/?auth=login&redirect=${encodeURIComponent(target)}`}
           className="btn-primary px-6 py-3"
         >
           Iniciar Sesión

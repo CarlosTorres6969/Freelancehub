@@ -1,14 +1,15 @@
 "use client"
 
 import { Suspense, useState, useEffect, useCallback } from "react"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { MessageCircle, Search, Send } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import AnimatedSection from "@/components/AnimatedSection"
 import type { Conversation, Message, Profile } from "@/types"
 
 function MessagesContent() {
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
+  const router = useRouter()
   const searchParams = useSearchParams()
   const conversationIdParam = searchParams.get("conversationId")
   const [conversations, setConversations] = useState<Conversation[]>([])
@@ -59,12 +60,13 @@ function MessagesContent() {
     if(response.ok){setInput("");loadMessages()}
   }
 
+  useEffect(() => {
+    if (loading || user) return
+    router.push(`/?auth=login&redirect=${encodeURIComponent("/messages")}`)
+  }, [loading, user, router])
+
   if (!user) {
-    return (
-      <div className="page-shell text-center">
-        <h1 className="text-2xl font-bold mb-4">Inicia sesión para ver tus mensajes</h1>
-      </div>
-    )
+    return <div className="page-shell text-center" />
   }
 
   const filtered = conversations.filter((c) => {

@@ -13,9 +13,10 @@ interface AuthModalProps {
   isOpen: boolean
   onClose: () => void
   initialMode?: AuthMode
+  redirectTo?: string | null
 }
 
-export default function AuthModal({ isOpen, onClose, initialMode = "login" }: AuthModalProps) {
+export default function AuthModal({ isOpen, onClose, initialMode = "login", redirectTo }: AuthModalProps) {
   const mode = initialMode
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -86,7 +87,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
           setError(result.error || "Error al crear la cuenta")
           return
         }
-        window.location.reload()
+        if (redirectTo) { window.location.href = redirectTo } else { window.location.reload() }
       } else {
         const response = await fetch("/api/auth/login", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({email,password}) })
         const result = await response.json()
@@ -94,8 +95,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
           setError(result.error || "Credenciales incorrectas")
           return
         }
-        window.location.reload()
-        onClose()
+        if (redirectTo) { window.location.href = redirectTo } else { window.location.reload() }
       }
     } catch (err: unknown) {
       let msg = "Error de autenticación"

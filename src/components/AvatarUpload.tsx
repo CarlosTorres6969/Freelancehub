@@ -3,18 +3,21 @@
 import { useRef, useState } from "react"
 import { useAuth } from "@/contexts/AuthContext"
 import Image from "next/image"
+import PasswordConfirmModal from "@/components/PasswordConfirmModal"
 
 export default function AvatarUpload() {
   const { user, profile, refreshProfile } = useAuth()
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState("")
+  const [pendingFile, setPendingFile] = useState<File | null>(null)
+  const [reauthError, setReauthError] = useState("")
 
   const initials = profile?.name
     ? profile.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
     : user?.email?.slice(0, 2).toUpperCase() ?? "?"
 
-  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file || !user) return
 
@@ -28,17 +31,32 @@ export default function AvatarUpload() {
     }
 
     setError("")
-    setUploading(true)
+    setPendingFile(file)
+  }
 
-    const data=new FormData();data.set("file",file);const response=await fetch("/api/me/avatar",{method:"POST",body:data})
+  function cancelUpload() {
+    setPendingFile(null)
+    setReauthError("")
+    if (inputRef.current) inputRef.current.value = ""
+  }
+
+  async function confirmUpload(password: string) {
+    if (!pendingFile) return
+    setUploading(true)
+    setReauthError("")
+
+    const data=new FormData();data.set("file",pendingFile);data.set("password",password);const response=await fetch("/api/me/avatar",{method:"POST",body:data})
     if (!response.ok) {
-      const result=await response.json();setError(result.error||"No se pudo subir")
+      const result=await response.json()
+      setReauthError(result.error||"No se pudo subir")
       setUploading(false)
       return
     }
 
     await refreshProfile()
     setUploading(false)
+    setPendingFile(null)
+    if (inputRef.current) inputRef.current.value = ""
   }
 
   return (
@@ -79,6 +97,16 @@ export default function AvatarUpload() {
 
       {error && <p className="text-xs text-red-500">{error}</p>}
       <p className="text-xs text-muted-fg">JPG, PNG o WebP · Máx. 2MB</p>
+
+      <PasswordConfirmModal
+        isOpen={!!pendingFile}
+        loading={uploading}
+        error={reauthError}
+        title="Confirma tu contraseña"
+        description="Por seguridad, ingresa tu contraseña para actualizar tu foto de perfil."
+        onConfirm={confirmUpload}
+        onCancel={cancelUpload}
+      />
     </div>
   )
 }

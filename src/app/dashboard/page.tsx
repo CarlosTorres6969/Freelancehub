@@ -9,6 +9,7 @@ import OrderActions from "@/components/OrderActions"
 import { setServiceActive } from "@/actions/services"
 import { IncomeChart, ProjectsChart, CategoryChart } from "@/components/Charts"
 import ClientDashboard from "@/components/ClientDashboard"
+import PasswordConfirmModal from "@/components/PasswordConfirmModal"
 import { statusStyles, statusLabels } from "@/lib/orderStatus"
 import type { Order, Service, Category } from "@/types"
 
@@ -19,6 +20,9 @@ export default function DashboardPage() {
   const [myServices, setMyServices] = useState<Service[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
+  const [toggleTarget, setToggleTarget] = useState<Service | null>(null)
+  const [reauthError, setReauthError] = useState("")
+  const [reauthLoading, setReauthLoading] = useState(false)
 
   async function loadDashboard() {
     const response=await fetch("/api/me/dashboard",{cache:"no-store"}),data=await response.json();if(response.ok){setOrders(data.orders);setMyServices(data.services);setCategories(data.categories)}
@@ -30,14 +34,25 @@ export default function DashboardPage() {
     loadDashboard().then(() => setLoading(false))
   }, [user, profile, authLoading])
 
-  async function handleToggleActive(service: Service) {
+  function handleToggleActive(service: Service) {
+    setReauthError("")
+    setToggleTarget(service)
+  }
+
+  async function confirmToggleActive(password: string) {
+    if (!toggleTarget) return
+    const service = toggleTarget
     const next = !service.active
-    setMyServices((prev) => prev.map((s) => (s.id === service.id ? { ...s, active: next } : s)))
+    setReauthLoading(true)
+    setReauthError("")
     try {
-      await setServiceActive(service.id, next)
-    } catch {
-      // Revierte el cambio optimista si el servidor lo rechaza.
-      setMyServices((prev) => prev.map((s) => (s.id === service.id ? { ...s, active: !next } : s)))
+      await setServiceActive(service.id, next, password)
+      setMyServices((prev) => prev.map((s) => (s.id === service.id ? { ...s, active: next } : s)))
+      setToggleTarget(null)
+    } catch (e) {
+      setReauthError(e instanceof Error ? e.message : "Contraseña incorrecta")
+    } finally {
+      setReauthLoading(false)
     }
   }
 
@@ -279,6 +294,16 @@ export default function DashboardPage() {
           )}
         </AnimatedSection>
       )}
+
+      <PasswordConfirmModal
+        isOpen={!!toggleTarget}
+        loading={reauthLoading}
+        error={reauthError}
+        title="Confirma tu contraseña"
+        description={toggleTarget ? `Ingresa tu contraseña para ${toggleTarget.active ? "pausar" : "reactivar"} "${toggleTarget.title}".` : undefined}
+        onConfirm={confirmToggleActive}
+        onCancel={() => { setToggleTarget(null); setReauthError("") }}
+      />
     </div>
   )
 }

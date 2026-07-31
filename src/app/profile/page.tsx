@@ -11,6 +11,7 @@ import LanguageCertificates from "@/components/LanguageCertificates"
 import LocationPicker from "@/components/LocationPicker"
 import TagAutocomplete from "@/components/TagAutocomplete"
 import PortfolioSection from "@/components/PortfolioSection"
+import PasswordConfirmModal from "@/components/PasswordConfirmModal"
 import { COMMON_LANGUAGES } from "@/data/languages"
 import { COMMON_SKILLS } from "@/data/skills"
 
@@ -29,7 +30,28 @@ export default function ProfilePage() {
   const [changingRole, setChangingRole] = useState(false)
   const [loading, setLoading] = useState(false)
   const [saved, setSaved] = useState(false)
-  const [error, setError] = useState("")
+  const [reauthAction, setReauthAction] = useState<null | ((password: string) => Promise<void>)>(null)
+  const [reauthError, setReauthError] = useState("")
+  const [reauthLoading, setReauthLoading] = useState(false)
+
+  function requestReauth(run: (password: string) => Promise<void>) {
+    setReauthError("")
+    setReauthAction(() => run)
+  }
+
+  async function handleReauthConfirm(password: string) {
+    if (!reauthAction) return
+    setReauthLoading(true)
+    setReauthError("")
+    try {
+      await reauthAction(password)
+      setReauthAction(null)
+    } catch (e) {
+      setReauthError(e instanceof Error ? e.message : "Contraseña incorrecta")
+    } finally {
+      setReauthLoading(false)
+    }
+  }
 
   useEffect(() => {
     if (profile) {
@@ -50,27 +72,36 @@ export default function ProfilePage() {
     if (nativeLanguage && !languages.includes(nativeLanguage)) setNativeLanguage("")
   }, [languages, nativeLanguage])
 
-  async function handleRoleChange(newRole: "client" | "freelancer") {
+  function handleRoleChange(newRole: "client" | "freelancer") {
     if (!user) return
-    setChangingRole(true)
-    await fetch("/api/me/role",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({role:newRole})})
-    await refreshProfile()
-    setRole(newRole)
-    setChangingRole(false)
+    requestReauth(async (password) => {
+      setChangingRole(true)
+      try {
+        const response = await fetch("/api/me/role",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({role:newRole,password})})
+        const result = await response.json()
+        if (!response.ok) throw new Error(result.error || "No se pudo cambiar el rol")
+        await refreshProfile()
+        setRole(newRole)
+      } finally {
+        setChangingRole(false)
+      }
+    })
   }
 
-  async function handleSave() {
+  function handleSave() {
     if (!user) return
-    setLoading(true)
-    setError("")
-    setSaved(false)
-
-    try {const data=new FormData();Object.entries({name,title,description,bio,department,municipality,native_language:nativeLanguage}).forEach(([k,v])=>data.set(k,v));data.set("skills",skills.join(","));data.set("languages",languages.join(","));await updateProfile(data)
-      setSaved(true)
-      await refreshProfile()
-      setTimeout(() => setSaved(false), 3000)
-    }catch(e){setError(e instanceof Error?e.message:"No se pudo guardar")}
-    setLoading(false)
+    requestReauth(async (password) => {
+      setLoading(true)
+      setSaved(false)
+      try {
+        const data=new FormData();Object.entries({name,title,description,bio,department,municipality,native_language:nativeLanguage}).forEach(([k,v])=>data.set(k,v));data.set("skills",skills.join(","));data.set("languages",languages.join(","));data.set("password",password);await updateProfile(data)
+        setSaved(true)
+        await refreshProfile()
+        setTimeout(() => setSaved(false), 3000)
+      } finally {
+        setLoading(false)
+      }
+    })
   }
 
   if (!user) {
@@ -138,12 +169,6 @@ export default function ProfilePage() {
               {changingRole && <p className="text-xs text-muted-fg mt-2 text-center animate-pulse">Actualizando...</p>}
             </div>
           </AnimatedSection>
-        )}
-
-        {error && (
-          <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
-            {error}
-          </div>
         )}
 
         {saved && (
@@ -277,6 +302,14 @@ export default function ProfilePage() {
           </div>
         </AnimatedSection>
       </div>
+
+      <PasswordConfirmModal
+        isOpen={!!reauthAction}
+        loading={reauthLoading}
+        error={reauthError}
+        onConfirm={handleReauthConfirm}
+        onCancel={() => { setReauthAction(null); setReauthError("") }}
+      />
     </div>
   )
 }

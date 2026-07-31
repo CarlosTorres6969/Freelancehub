@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/contexts/ToastContext"
 import { createService, updateService } from "@/actions/services"
+import PasswordConfirmModal from "@/components/PasswordConfirmModal"
 import type { Category, Service } from "@/types"
 
 interface ServiceFormProps {
@@ -16,6 +17,8 @@ export default function ServiceForm({ service }: ServiceFormProps) {
   const [categories, setCategories] = useState<Category[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
+  const [pendingFormData, setPendingFormData] = useState<FormData | null>(null)
+  const [reauthError, setReauthError] = useState("")
 
   const isEdit = Boolean(service)
 
@@ -23,26 +26,32 @@ export default function ServiceForm({ service }: ServiceFormProps) {
     fetch("/api/public/catalog").then(r=>r.json()).then(data=>setCategories(data.categories??[]))
   }, [])
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError("")
+    setPendingFormData(new FormData(e.currentTarget))
+  }
+
+  async function confirmSubmit(password: string) {
+    if (!pendingFormData) return
     setSubmitting(true)
+    setReauthError("")
     try {
-      const formData = new FormData(e.currentTarget)
+      pendingFormData.set("password", password)
       if (isEdit && service) {
-        await updateService(service.id, formData)
+        await updateService(service.id, pendingFormData)
         addToast("Servicio actualizado", "success")
         router.push("/dashboard")
       } else {
-        await createService(formData)
+        await createService(pendingFormData)
         addToast("Servicio publicado", "success")
         router.push("/dashboard")
       }
       router.refresh()
+      setPendingFormData(null)
     } catch (err) {
       const msg = err instanceof Error ? err.message : "No se pudo guardar el servicio"
-      setError(msg)
-      addToast(msg, "error")
+      setReauthError(msg)
     } finally {
       setSubmitting(false)
     }
@@ -168,6 +177,14 @@ export default function ServiceForm({ service }: ServiceFormProps) {
           Cancelar
         </button>
       </div>
+
+      <PasswordConfirmModal
+        isOpen={!!pendingFormData}
+        loading={submitting}
+        error={reauthError}
+        onConfirm={confirmSubmit}
+        onCancel={() => { setPendingFormData(null); setReauthError("") }}
+      />
     </form>
   )
 }

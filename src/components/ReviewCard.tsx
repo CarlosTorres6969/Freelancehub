@@ -6,6 +6,7 @@ import { Star } from "lucide-react"
 import { editReview, replyToReview } from "@/actions/reviews"
 import { useAuth } from "@/contexts/AuthContext"
 import { useToast } from "@/contexts/ToastContext"
+import PasswordConfirmModal from "@/components/PasswordConfirmModal"
 import type { Review } from "@/types"
 
 export default function ReviewCard({ review, freelancerId }: { review: Review; freelancerId: string }) {
@@ -22,48 +23,73 @@ export default function ReviewCard({ review, freelancerId }: { review: Review; f
   const [replying, setReplying] = useState(false)
   const [replyText, setReplyText] = useState(review.freelancer_reply ?? "")
 
+  const [reauthAction, setReauthAction] = useState<null | ((password: string) => Promise<void>)>(null)
+  const [reauthError, setReauthError] = useState("")
+  const [reauthLoading, setReauthLoading] = useState(false)
+
   const isAuthor = user?.id === review.user_id
   const isFreelancer = user?.id === freelancerId
 
-  async function saveEdit() {
+  function requestReauth(run: (password: string) => Promise<void>) {
+    setReauthError("")
+    setReauthAction(() => run)
+  }
+
+  async function handleReauthConfirm(password: string) {
+    if (!reauthAction) return
+    setReauthLoading(true)
+    setReauthError("")
+    try {
+      await reauthAction(password)
+      setReauthAction(null)
+    } catch (e) {
+      setReauthError(e instanceof Error ? e.message : "Contraseña incorrecta")
+    } finally {
+      setReauthLoading(false)
+    }
+  }
+
+  function saveEdit() {
     if (rating < 1 || !content.trim()) {
       addToast("Completa la calificación y el comentario", "error")
       return
     }
-    setBusy(true)
-    try {
-      const data = new FormData()
-      data.set("rating", String(rating))
-      data.set("content", content.trim())
-      await editReview(review.id, data)
-      addToast("Reseña actualizada", "success")
-      setEditing(false)
-      router.refresh()
-    } catch (err) {
-      addToast(err instanceof Error ? err.message : "No se pudo editar la reseña", "error")
-    } finally {
-      setBusy(false)
-    }
+    requestReauth(async (password) => {
+      setBusy(true)
+      try {
+        const data = new FormData()
+        data.set("rating", String(rating))
+        data.set("content", content.trim())
+        data.set("password", password)
+        await editReview(review.id, data)
+        addToast("Reseña actualizada", "success")
+        setEditing(false)
+        router.refresh()
+      } finally {
+        setBusy(false)
+      }
+    })
   }
 
-  async function saveReply() {
+  function saveReply() {
     if (!replyText.trim()) {
       addToast("Escribe una respuesta", "error")
       return
     }
-    setBusy(true)
-    try {
-      const data = new FormData()
-      data.set("reply", replyText.trim())
-      await replyToReview(review.id, data)
-      addToast("Respuesta publicada", "success")
-      setReplying(false)
-      router.refresh()
-    } catch (err) {
-      addToast(err instanceof Error ? err.message : "No se pudo publicar la respuesta", "error")
-    } finally {
-      setBusy(false)
-    }
+    requestReauth(async (password) => {
+      setBusy(true)
+      try {
+        const data = new FormData()
+        data.set("reply", replyText.trim())
+        data.set("password", password)
+        await replyToReview(review.id, data)
+        addToast("Respuesta publicada", "success")
+        setReplying(false)
+        router.refresh()
+      } finally {
+        setBusy(false)
+      }
+    })
   }
 
   return (
@@ -188,6 +214,14 @@ export default function ReviewCard({ review, freelancerId }: { review: Review; f
           )}
         </div>
       )}
+
+      <PasswordConfirmModal
+        isOpen={!!reauthAction}
+        loading={reauthLoading}
+        error={reauthError}
+        onConfirm={handleReauthConfirm}
+        onCancel={() => { setReauthAction(null); setReauthError("") }}
+      />
     </div>
   )
 }

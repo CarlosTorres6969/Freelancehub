@@ -14,7 +14,7 @@ export default function ContactFreelancerButton({ freelancerId }: { freelancerId
 
   async function handleClick() {
     if (!user) {
-      router.push("/?auth=login")
+      router.push(`/?auth=login&redirect=${encodeURIComponent("/messages")}`)
       return
     }
     setLoading(true)

@@ -31,6 +31,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [authOpen, setAuthOpen] = useState(false)
   const [authMode, setAuthMode] = useState<AuthMode>("login")
+  const [authRedirect, setAuthRedirect] = useState<string | null>(null)
   const [profileOpen, setProfileOpen] = useState(false)
   const { favorites } = useFavorites()
   const profileRef = useRef<HTMLDivElement>(null)
@@ -45,10 +46,13 @@ export default function Navbar() {
     if (loading || user) return
     const params = new URLSearchParams(window.location.search)
     const auth = params.get("auth")
+    const redirect = params.get("redirect")
     if (auth === "login" || auth === "register") {
       setAuthMode(auth)
+      setAuthRedirect(redirect)
       setAuthOpen(true)
       params.delete("auth")
+      params.delete("redirect")
       const qs = params.toString()
       window.history.replaceState(null, "", window.location.pathname + (qs ? `?${qs}` : ""))
     }
@@ -169,13 +173,13 @@ export default function Navbar() {
               ) : (
                 <div className="flex items-center gap-2 ml-1">
                   <button
-                    onClick={() => { setAuthMode("login"); setAuthOpen(true) }}
+                    onClick={() => { setAuthMode("login"); setAuthRedirect(null); setAuthOpen(true) }}
                     className="btn-secondary hover-lift-3d px-4 py-2 text-sm"
                   >
                     Iniciar Sesión
                   </button>
                   <button
-                    onClick={() => { setAuthMode("register"); setAuthOpen(true) }}
+                    onClick={() => { setAuthMode("register"); setAuthRedirect(null); setAuthOpen(true) }}
                     className="btn-primary hover-lift-3d px-4 py-2 text-sm"
                   >
                     Registrarse
@@ -223,13 +227,13 @@ export default function Navbar() {
               ) : (
                 <div className="space-y-2">
                   <button
-                    onClick={() => { setAuthMode("login"); setAuthOpen(true); setMenuOpen(false) }}
+                    onClick={() => { setAuthMode("login"); setAuthRedirect(null); setAuthOpen(true); setMenuOpen(false) }}
                     className="btn-secondary w-full px-3 py-2 text-sm"
                   >
                     Iniciar Sesión
                   </button>
                   <button
-                    onClick={() => { setAuthMode("register"); setAuthOpen(true); setMenuOpen(false) }}
+                    onClick={() => { setAuthMode("register"); setAuthRedirect(null); setAuthOpen(true); setMenuOpen(false) }}
                     className="btn-primary w-full px-3 py-2 text-sm"
                   >
                     Registrarse
@@ -241,7 +245,7 @@ export default function Navbar() {
         </div>
       </nav>
 
-      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} initialMode={authMode} />
+      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} initialMode={authMode} redirectTo={authRedirect} />
     </>
   )
 }

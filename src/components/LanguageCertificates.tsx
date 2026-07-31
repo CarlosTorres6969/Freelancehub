@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useAuth } from "@/contexts/AuthContext"
+import PasswordConfirmModal from "@/components/PasswordConfirmModal"
 
 interface LanguageCertificate {
   id: string
@@ -22,6 +23,28 @@ export default function LanguageCertificates({ languages }: LanguageCertificates
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
+  const [reauthAction, setReauthAction] = useState<null | ((password: string) => Promise<void>)>(null)
+  const [reauthError, setReauthError] = useState("")
+  const [reauthLoading, setReauthLoading] = useState(false)
+
+  function requestReauth(run: (password: string) => Promise<void>) {
+    setReauthError("")
+    setReauthAction(() => run)
+  }
+
+  async function handleReauthConfirm(password: string) {
+    if (!reauthAction) return
+    setReauthLoading(true)
+    setReauthError("")
+    try {
+      await reauthAction(password)
+      setReauthAction(null)
+    } catch (e) {
+      setReauthError(e instanceof Error ? e.message : "Contraseña incorrecta")
+    } finally {
+      setReauthLoading(false)
+    }
+  }
 
   useEffect(() => {
     if (!user) { setLoading(false); return }
@@ -31,7 +54,7 @@ export default function LanguageCertificates({ languages }: LanguageCertificates
     })
   }, [user])
 
-  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file || !user) return
 
@@ -49,24 +72,28 @@ export default function LanguageCertificates({ languages }: LanguageCertificates
     }
 
     setError("")
-    setUploading(true)
+    requestReauth(async (password) => {
+      setUploading(true)
+      try {
+        const form=new FormData();form.set("file",file);form.set("language",language);form.set("password",password);const response=await fetch("/api/language-certificates",{method:"POST",body:form}),data=await response.json()
+        if (!response.ok) throw new Error(data.error || "No se pudo subir")
 
-    const form=new FormData();form.set("file",file);form.set("language",language);const response=await fetch("/api/language-certificates",{method:"POST",body:form}),data=await response.json()
-    if (!response.ok) {
-      setError(data.error || "No se pudo subir")
-      setUploading(false)
-      return
-    }
-
-    setItems(prev => [data, ...prev])
-    setLanguage("")
-    setUploading(false)
-    if (inputRef.current) inputRef.current.value = ""
+        setItems(prev => [data, ...prev])
+        setLanguage("")
+        if (inputRef.current) inputRef.current.value = ""
+      } finally {
+        setUploading(false)
+      }
+    })
   }
 
-  async function handleDelete(id: string) {
-    await fetch(`/api/language-certificates?id=${id}`, { method: "DELETE" })
-    setItems(prev => prev.filter(i => i.id !== id))
+  function handleDelete(id: string) {
+    requestReauth(async (password) => {
+      const response = await fetch(`/api/language-certificates?id=${id}`, { method: "DELETE", headers: {"Content-Type":"application/json"}, body: JSON.stringify({password}) })
+      const data = await response.json().catch(()=>({}))
+      if (!response.ok) throw new Error(data.error || "No se pudo eliminar")
+      setItems(prev => prev.filter(i => i.id !== id))
+    })
   }
 
   if (loading) return null
@@ -117,6 +144,18 @@ export default function LanguageCertificates({ languages }: LanguageCertificates
           ))}
         </div>
       )}
+
+      <PasswordConfirmModal
+        isOpen={!!reauthAction}
+        loading={reauthLoading}
+        error={reauthError}
+        onConfirm={handleReauthConfirm}
+        onCancel={() => {
+          setReauthAction(null)
+          setReauthError("")
+          if (inputRef.current) inputRef.current.value = ""
+        }}
+      />
     </div>
   )
 }

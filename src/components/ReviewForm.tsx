@@ -5,6 +5,7 @@ import { Star } from "lucide-react"
 import { addReview, getReviewEligibility } from "@/actions/reviews"
 import { useAuth } from "@/contexts/AuthContext"
 import { useToast } from "@/contexts/ToastContext"
+import PasswordConfirmModal from "@/components/PasswordConfirmModal"
 
 export default function ReviewForm({ serviceId, onSubmitted }: { serviceId: string; onSubmitted?: () => void }) {
   const { user, loading: authLoading } = useAuth()
@@ -14,6 +15,8 @@ export default function ReviewForm({ serviceId, onSubmitted }: { serviceId: stri
   const [comment, setComment] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [eligible, setEligible] = useState<boolean | null>(null)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [reauthError, setReauthError] = useState("")
 
   useEffect(() => {
     if (authLoading) return
@@ -30,7 +33,7 @@ export default function ReviewForm({ serviceId, onSubmitted }: { serviceId: stri
     }
   }, [authLoading, user, serviceId])
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
     if (!user) {
@@ -48,11 +51,17 @@ export default function ReviewForm({ serviceId, onSubmitted }: { serviceId: stri
       return
     }
 
-    setSubmitting(true)
+    setReauthError("")
+    setConfirmOpen(true)
+  }
 
-    try { const data=new FormData();data.set("serviceId",serviceId);data.set("rating",String(rating));data.set("content",comment.trim());await addReview(data)
+  async function confirmSubmit(password: string) {
+    setSubmitting(true)
+    setReauthError("")
+    try {
+      const data=new FormData();data.set("serviceId",serviceId);data.set("rating",String(rating));data.set("content",comment.trim());data.set("password",password);await addReview(data)
     } catch (err) {
-      addToast(err instanceof Error ? err.message : "Error al enviar la reseña", "error")
+      setReauthError(err instanceof Error ? err.message : "Error al enviar la reseña")
       setSubmitting(false)
       return
     }
@@ -61,6 +70,7 @@ export default function ReviewForm({ serviceId, onSubmitted }: { serviceId: stri
     setRating(0)
     setComment("")
     setSubmitting(false)
+    setConfirmOpen(false)
     setEligible(false)
     onSubmitted?.()
   }
@@ -127,6 +137,14 @@ export default function ReviewForm({ serviceId, onSubmitted }: { serviceId: stri
           {submitting ? "Enviando..." : "Enviar Reseña"}
         </button>
       </div>
+
+      <PasswordConfirmModal
+        isOpen={confirmOpen}
+        loading={submitting}
+        error={reauthError}
+        onConfirm={confirmSubmit}
+        onCancel={() => { setConfirmOpen(false); setReauthError("") }}
+      />
     </form>
   )
 }

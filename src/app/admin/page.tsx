@@ -1,9 +1,10 @@
 "use client"
 
-import { useEffect, useState, useTransition } from "react"
+import { useEffect, useState } from "react"
 import { useAuth } from "@/contexts/AuthContext"
 import { useRouter } from "next/navigation"
 import AnimatedSection from "@/components/AnimatedSection"
+import PasswordConfirmModal from "@/components/PasswordConfirmModal"
 import {
   getAdminStats, getAdminUsers, getAdminServices,
   updateUserRole, toggleServiceActive, updateCommissionRate, getCommissionRate,
@@ -59,8 +60,30 @@ export default function AdminPage() {
   const [dataLoading, setDataLoading] = useState(true)
   const [banTarget, setBanTarget] = useState<AdminUser | null>(null)
   const [banReason, setBanReason] = useState("")
-  const [isPending, startTransition] = useTransition()
   const [toast, setToast] = useState<string | null>(null)
+  const [reauthAction, setReauthAction] = useState<null | ((password: string) => Promise<void>)>(null)
+  const [reauthError, setReauthError] = useState("")
+  const [reauthLoading, setReauthLoading] = useState(false)
+  const isPending = reauthLoading
+
+  function requestReauth(run: (password: string) => Promise<void>) {
+    setReauthError("")
+    setReauthAction(() => run)
+  }
+
+  async function handleReauthConfirm(password: string) {
+    if (!reauthAction) return
+    setReauthLoading(true)
+    setReauthError("")
+    try {
+      await reauthAction(password)
+      setReauthAction(null)
+    } catch (e) {
+      setReauthError(e instanceof Error ? e.message : "Contraseña incorrecta")
+    } finally {
+      setReauthLoading(false)
+    }
+  }
 
   useEffect(() => {
     if (!loading && profile?.role !== "admin") router.replace("/dashboard")
@@ -92,16 +115,16 @@ export default function AdminPage() {
   }
 
   function handleRoleChange(userId: string, role: "client" | "freelancer" | "admin") {
-    startTransition(async () => {
-      await updateUserRole(userId, role)
+    requestReauth(async (password) => {
+      await updateUserRole(userId, role, password)
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, role } : u))
       showToast("Rol actualizado")
     })
   }
 
   function handleToggleService(serviceId: string, active: boolean) {
-    startTransition(async () => {
-      await toggleServiceActive(serviceId, !active)
+    requestReauth(async (password) => {
+      await toggleServiceActive(serviceId, !active, password)
       setServices(prev => prev.map(s => s.id === serviceId ? { ...s, active: !active } : s))
       showToast(active ? "Servicio desactivado" : "Servicio activado")
     })
@@ -113,8 +136,8 @@ export default function AdminPage() {
       showToast("Valor inválido (0–50%)")
       return
     }
-    startTransition(async () => {
-      await updateCommissionRate(rate)
+    requestReauth(async (password) => {
+      await updateCommissionRate(rate, password)
       setCommission(rate)
       showToast(`Comisión actualizada a ${commissionInput}%`)
     })
@@ -123,63 +146,47 @@ export default function AdminPage() {
   function handleConfirmBan() {
     if (!banTarget) return
     const target = banTarget
-    startTransition(async () => {
-      try {
-        await banUser(target.id, banReason)
-        setUsers(prev => prev.map(u => u.id === target.id ? { ...u, disabled: true } : u))
-        showToast(`${target.name} fue baneado`)
-      } catch (e) {
-        showToast(e instanceof Error ? e.message : "Error al banear")
-      } finally {
-        setBanTarget(null)
-        setBanReason("")
-      }
+    const reason = banReason
+    requestReauth(async (password) => {
+      await banUser(target.id, reason, password)
+      setUsers(prev => prev.map(u => u.id === target.id ? { ...u, disabled: true } : u))
+      showToast(`${target.name} fue baneado`)
+      setBanTarget(null)
+      setBanReason("")
     })
   }
 
   function handleUnban(user: AdminUser) {
-    startTransition(async () => {
-      await unbanUser(user.id)
+    requestReauth(async (password) => {
+      await unbanUser(user.id, password)
       setUsers(prev => prev.map(u => u.id === user.id ? { ...u, disabled: false } : u))
       showToast(`${user.name} fue desbaneado`)
     })
   }
 
   function handleResolveDispute(orderId: string, resolution: "completed" | "cancelled") {
-    startTransition(async () => {
-      try {
-        await resolveDispute(orderId, resolution)
-        setDisputes(prev => prev.filter(o => o.id !== orderId))
-        showToast(resolution === "completed" ? "Disputa resuelta a favor del freelancer" : "Disputa resuelta a favor del cliente")
-      } catch (e) {
-        showToast(e instanceof Error ? e.message : "Error al resolver disputa")
-      }
+    requestReauth(async (password) => {
+      await resolveDispute(orderId, resolution, password)
+      setDisputes(prev => prev.filter(o => o.id !== orderId))
+      showToast(resolution === "completed" ? "Disputa resuelta a favor del freelancer" : "Disputa resuelta a favor del cliente")
     })
   }
 
   function handleDeleteService(service: Service) {
     if (!confirm(`¿Eliminar permanentemente "${service.title}"?`)) return
-    startTransition(async () => {
-      try {
-        await deleteService(service.id)
-        setServices(prev => prev.filter(s => s.id !== service.id))
-        showToast("Servicio eliminado")
-      } catch (e) {
-        showToast(e instanceof Error ? e.message : "Error al eliminar")
-      }
+    requestReauth(async (password) => {
+      await deleteService(service.id, password)
+      setServices(prev => prev.filter(s => s.id !== service.id))
+      showToast("Servicio eliminado")
     })
   }
 
   function handleDeleteReview(review: AdminReview) {
     if (!confirm(`¿Eliminar la reseña de ${review.user_name}?`)) return
-    startTransition(async () => {
-      try {
-        await deleteReview(String(review.id))
-        setReviews(prev => prev.filter(r => r.id !== review.id))
-        showToast("Reseña eliminada")
-      } catch (e) {
-        showToast(e instanceof Error ? e.message : "Error al eliminar")
-      }
+    requestReauth(async (password) => {
+      await deleteReview(String(review.id), password)
+      setReviews(prev => prev.filter(r => r.id !== review.id))
+      showToast("Reseña eliminada")
     })
   }
 
@@ -650,6 +657,14 @@ export default function AdminPage() {
           </div>
         </div>
       )}
+
+      <PasswordConfirmModal
+        isOpen={!!reauthAction}
+        loading={reauthLoading}
+        error={reauthError}
+        onConfirm={handleReauthConfirm}
+        onCancel={() => { setReauthAction(null); setReauthError("") }}
+      />
     </div>
   )
 }

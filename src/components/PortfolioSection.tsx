@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import { useAuth } from "@/contexts/AuthContext"
+import PasswordConfirmModal from "@/components/PasswordConfirmModal"
 
 interface PortfolioItem {
   id: string
@@ -33,6 +34,28 @@ export default function PortfolioSection({ freelancerId, editable = false }: Por
   const [file, setFile] = useState<File | null>(null)
   const [error, setError] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
+  const [reauthAction, setReauthAction] = useState<null | ((password: string) => Promise<void>)>(null)
+  const [reauthError, setReauthError] = useState("")
+  const [reauthLoading, setReauthLoading] = useState(false)
+
+  function requestReauth(run: (password: string) => Promise<void>) {
+    setReauthError("")
+    setReauthAction(() => run)
+  }
+
+  async function handleReauthConfirm(password: string) {
+    if (!reauthAction) return
+    setReauthLoading(true)
+    setReauthError("")
+    try {
+      await reauthAction(password)
+      setReauthAction(null)
+    } catch (e) {
+      setReauthError(e instanceof Error ? e.message : "Contraseña incorrecta")
+    } finally {
+      setReauthLoading(false)
+    }
+  }
 
   useEffect(() => {
     if (!targetId) { setLoading(false); return }
@@ -51,25 +74,33 @@ export default function PortfolioSection({ freelancerId, editable = false }: Por
     setError("")
   }
 
-  async function handleAdd() {
+  function handleAdd() {
     if (!user || !file || !title.trim()) {
       setError("Título e imagen son requeridos")
       return
     }
-    setUploading(true)
     setError("")
+    requestReauth(async (password) => {
+      setUploading(true)
+      try {
+        const form=new FormData();form.set("file",file);form.set("title",title);form.set("description",description);form.set("url",url);form.set("password",password);const response=await fetch("/api/portfolio",{method:"POST",body:form}),data=await response.json();if(!response.ok)throw new Error(data.error||"No se pudo guardar")
 
-    const form=new FormData();form.set("file",file);form.set("title",title);form.set("description",description);form.set("url",url);const response=await fetch("/api/portfolio",{method:"POST",body:form}),data=await response.json();if(!response.ok){setError(data.error||"No se pudo guardar");setUploading(false);return}
-
-    setItems(prev => [data, ...prev])
-    setTitle(""); setDescription(""); setUrl(""); setFile(null); setPreview(null)
-    setShowForm(false)
-    setUploading(false)
+        setItems(prev => [data, ...prev])
+        setTitle(""); setDescription(""); setUrl(""); setFile(null); setPreview(null)
+        setShowForm(false)
+      } finally {
+        setUploading(false)
+      }
+    })
   }
 
-  async function handleDelete(id: string) {
-    await fetch(`/api/portfolio?id=${id}`,{method:"DELETE"})
-    setItems(prev => prev.filter(i => i.id !== id))
+  function handleDelete(id: string) {
+    requestReauth(async (password) => {
+      const response = await fetch(`/api/portfolio?id=${id}`,{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({password})})
+      const data = await response.json().catch(()=>({}))
+      if (!response.ok) throw new Error(data.error || "No se pudo eliminar")
+      setItems(prev => prev.filter(i => i.id !== id))
+    })
   }
 
   if (loading) return <div className="h-32 animate-pulse rounded-lg bg-muted" />
@@ -183,6 +214,14 @@ export default function PortfolioSection({ freelancerId, editable = false }: Por
           ))}
         </div>
       )}
+
+      <PasswordConfirmModal
+        isOpen={!!reauthAction}
+        loading={reauthLoading}
+        error={reauthError}
+        onConfirm={handleReauthConfirm}
+        onCancel={() => { setReauthAction(null); setReauthError("") }}
+      />
     </div>
   )
 }
